@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub</title>
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Juan-OM26/ls.operamente.html/main/public/OM%20Logoo.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Juan-OM26/ls.operamente.html/main/public/OM%20Logoo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --grad: linear-gradient(135deg, #6A2DE2, #F52F83);
+  --acc:  #6A2DE2;
+  --pink: #F52F83;
+  --grn:  #00d4aa;
+  --amb:  #f5be5a;
+  --red:  #ee6c6c;
+  --ac2:  rgba(106,45,226,0.18);
+  --ac3:  rgba(106,45,226,0.07);
+  --gn2:  rgba(0,212,170,0.12);
+}
+[data-theme="dark"] {
+  --bg:   #0a0b14;
+  --s1:   #0f1117;
+  --s2:   #1a1d2e;
+  --s3:   #222540;
+  --b1:   rgba(255,255,255,0.07);
+  --b2:   rgba(255,255,255,0.13);
+  --b3:   rgba(255,255,255,0.20);
+  --tx:   #ffffff;
+  --sub:  #e8e6f8;
+  --mut:  #b0aed0;
+}
+[data-theme="light"] {
+  --bg:   #eeedf6;
+  --s1:   #ffffff;
+  --s2:   #f5f4fb;
+  --s3:   #ebe9f8;
+  --b1:   rgba(0,0,0,0.07);
+  --b2:   rgba(0,0,0,0.12);
+  --b3:   rgba(0,0,0,0.18);
+  --tx:   #1a1830;
+  --sub:  #3a3860;
+  --mut:  #6a68a0;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:14px; }
+body { background:var(--bg); color:var(--tx); font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden; transition:background 0.3s,color 0.3s; }
+[data-theme="dark"] body::after { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E"); pointer-events:none; z-index:999; opacity:0.5; }
+
+.wrap { max-width:1100px; margin:0 auto; padding:32px 24px 60px; position:relative; z-index:1; }
+
+/* HEADER */
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-icon { width:40px; height:40px; border-radius:10px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:600; font-size:18px; color:#fff; flex-shrink:0; }
+.brand-name { font-size:13px; color:var(--mut); letter-spacing:0.3px; }
+.brand-title { font-family:'Fraunces',serif; font-size:20px; font-weight:600; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.header-right { display:flex; align-items:center; gap:10px; }
+.date-tag { font-size:11px; color:var(--sub); background:var(--s2); border:0.5px solid var(--b1); border-radius:20px; padding:4px 12px; white-space:nowrap; }
+.lang-btn, .theme-btn { background:var(--s2); border:0.5px solid var(--b2); border-radius:20px; color:var(--sub); cursor:pointer; padding:5px 12px; font-size:12px; font-family:'Inter',sans-serif; display:flex; align-items:center; gap:6px; transition:all 0.15s; user-select:none; }
+.lang-btn:hover, .theme-btn:hover { border-color:var(--acc); color:var(--acc); }
+.lang-opt { opacity:0.45; transition:opacity 0.15s,color 0.15s; }
+.lang-opt.on { opacity:1; color:var(--acc); font-weight:600; }
+
+/* SUMMARY CARD */
+.summary-card { background:var(--s1); border:0.5px solid var(--b1); border-radius:14px; padding:18px 22px; margin-bottom:20px; }
+.summary-top { display:flex; gap:36px; align-items:center; margin-bottom:16px; }
+.summary-block { }
+.summary-label { font-size:10px; color:var(--mut); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:4px; }
+.summary-val { font-family:'Fraunces',serif; font-size:22px; font-weight:600; color:var(--tx); }
+.summary-activity { font-size:14px; color:var(--tx); flex:1; }
+.summary-divider { border-top:0.5px solid var(--b1); padding-top:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.period-label { font-size:11px; color:var(--mut); letter-spacing:0.3px; text-transform:uppercase; }
+.period-selector { display:flex; background:var(--s2); border:0.5px solid var(--b1); border-radius:10px; padding:4px; }
+.period-opt { padding:7px 14px; font-size:12px; color:var(--mut); border-radius:7px; cursor:pointer; transition:all 0.15s; user-select:none; }
+.period-opt:hover { color:var(--sub); }
+.period-opt.active { color:#0a0b14; background:var(--grad); font-weight:600; }
+[data-theme="light"] .period-opt.active { color:#fff; }
+
+/* AGENT ROW */
+.agent-list { display:flex; flex-direction:column; gap:16px; }
+.agent-card { background:var(--s1); border:0.5px solid var(--b1); border-radius:14px; padding:22px 26px; position:relative; transition:border-color 0.2s; }
+.agent-card.acc-violet { border-left:3px solid #6A2DE2; }
+.agent-card.acc-magenta { border-left:3px solid #F52F83; }
+.agent-card.acc-lila { border-left:3px solid #9C7FE8; }
+.help-icon { position:absolute; top:18px; right:20px; width:18px; height:18px; border-radius:50%; border:0.5px solid var(--mut); color:var(--mut); font-size:10px; display:flex; align-items:center; justify-content:center; cursor:default; opacity:0.6; transition:opacity 0.15s; }
+.help-icon:hover { opacity:1; }
+.agent-head { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+.agent-icon { width:30px; height:30px; border-radius:8px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#fff; flex-shrink:0; }
+.agent-name { font-size:15px; font-weight:500; color:var(--tx); }
+.agent-desc { font-size:11px; color:var(--mut); }
+.agent-status { font-size:10px; border:0.5px solid rgba(93,202,165,0.3); color:#5DCAA5; padding:3px 9px; border-radius:6px; margin-left:auto; }
+.agent-status.demo { border-color:rgba(245,190,90,0.3); color:var(--amb); }
+.agent-body { display:flex; align-items:center; gap:28px; margin-bottom:18px; flex-wrap:wrap; }
+.agent-main { min-width:90px; }
+.agent-main-label { font-size:10px; color:var(--mut); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:4px; }
+.agent-main-val { font-family:'Fraunces',serif; font-size:30px; font-weight:600; color:var(--tx); }
+.agent-secondaries { flex:1; display:flex; gap:28px; flex-wrap:wrap; }
+.agent-sec-label { font-size:10px; color:var(--mut); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:4px; }
+.agent-sec-val { font-size:17px; font-weight:500; color:var(--tx); }
+.agent-trend { width:140px; flex-shrink:0; border-left:0.5px solid var(--b1); padding-left:18px; }
+.agent-trend-label { font-size:10px; color:var(--mut); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:6px; }
+.agent-trend-empty { font-size:10px; color:var(--mut); opacity:0.7; }
+.agent-foot { border-top:0.5px solid var(--b1); padding-top:14px; display:flex; justify-content:flex-end; }
+.agent-cta { background:linear-gradient(135deg,rgba(106,45,226,0.15),rgba(245,47,131,0.15)); border:0.5px solid rgba(168,143,232,0.3); border-radius:8px; padding:8px 18px; font-size:13px; color:#C9B6F2; cursor:pointer; display:flex; align-items:center; gap:6px; text-decoration:none; }
+[data-theme="light"] .agent-cta { color:#6A2DE2; }
+.agent-cta:hover { opacity:0.85; }
+
+/* LOGIN */
+.login-overlay { position:fixed; inset:0; z-index:9999; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:20px; }
+.login-overlay.hidden { display:none; }
+.login-box { background:var(--s1); border:0.5px solid var(--b2); border-radius:20px; padding:40px 36px; width:100%; max-width:380px; display:flex; flex-direction:column; align-items:center; gap:28px; box-shadow:0 24px 64px rgba(0,0,0,0.5); position:relative; overflow:hidden; }
+.login-box::before { content:""; position:absolute; top:0; left:0; right:0; height:2px; background:var(--grad); }
+.login-logo { height:32px; opacity:0.92; }
+.login-title { font-family:"Fraunces",serif; font-size:20px; font-weight:600; letter-spacing:-0.3px; color:var(--tx); text-align:center; line-height:1.3; }
+.login-sub { font-size:11px; color:var(--mut); text-align:center; margin-top:-20px; }
+.login-field { width:100%; display:flex; flex-direction:column; gap:6px; }
+.login-field label { font-size:10px; color:var(--mut); letter-spacing:0.12em; text-transform:uppercase; }
+.login-input { width:100%; background:var(--s2); border:0.5px solid var(--b2); border-radius:10px; color:var(--tx); padding:12px 16px; font-size:14px; font-family:"Inter",sans-serif; outline:none; transition:border-color 0.15s,background 0.15s; }
+.login-input:focus { border-color:var(--acc); background:var(--ac3); }
+.login-input.error { border-color:var(--red); animation:loginShake 0.4s ease; }
+@keyframes loginShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+.login-error { font-size:11px; color:var(--red); text-align:center; min-height:16px; }
+.login-btn { width:100%; background:var(--grad); border:none; border-radius:10px; color:white; font-family:"Fraunces",serif; font-size:16px; font-weight:600; padding:13px; cursor:pointer; transition:opacity 0.2s,transform 0.15s; letter-spacing:-0.2px; }
+.login-btn:hover { opacity:0.9; transform:translateY(-1px); }
+.login-footer { font-size:10px; color:var(--mut); letter-spacing:0.1em; }
+
+@media(max-width:768px){
+  .wrap { padding:20px 16px 40px; }
+  .header { flex-wrap:wrap; gap:10px; }
+  .summary-top { flex-direction:column; align-items:flex-start; gap:14px; }
+  .agent-body { flex-direction:column; align-items:flex-start; gap:16px; }
+  .agent-trend { border-left:none; padding-left:0; width:100%; }
+  .agent-secondaries { gap:20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="login-gate">
+  <div class="login-box">
+    <img id="login-logo" src="https://operamente-github.jdray1.easypanel.host/logo/Operamente.png" alt="Operamente" class="login-logo">
+    <div class="login-title" id="t-login-title">Hub Operamente</div>
+    <div class="login-sub" id="t-login-sub">Acceso restringido · Operamente</div>
+    <div class="login-field">
+      <label id="t-login-label">Contraseña</label>
+      <input class="login-input" id="login-input" type="password" placeholder="············" onkeydown="if(event.key==='Enter')loginSubmit()">
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="login-btn" onclick="loginSubmit()" id="t-login-btn">Ingresar</button>
+    <div class="login-footer">operamente.com</div>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none;">
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">OM</div>
+      <div>
+        <div class="brand-name">operamente</div>
+        <div class="brand-title">Hub</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="date-tag" id="topbar-date"></div>
+      <button class="lang-btn" onclick="toggleLang()"><span class="lang-opt" id="lang-es">ES</span><span style="opacity:0.3">|</span><span class="lang-opt" id="lang-en">EN</span></button>
+      <button class="theme-btn" onclick="toggleTheme()"><span id="theme-icon">☀</span><span id="theme-label">Claro</span></button>
+    </div>
+  </div>
+
+  <div class="summary-card">
+    <div class="summary-top">
+      <div class="summary-block">
+        <div class="summary-label" id="t-agentes-activos">Agentes activos</div>
+        <div class="summary-val" id="sum-agentes">3 / 3</div>
+      </div>
+      <div class="summary-activity">
+        <div class="summary-label" id="t-ultima-actividad">Última actividad</div>
+        <div id="sum-actividad" style="margin-top:4px;">—</div>
+      </div>
+    </div>
+    <div class="summary-divider">
+      <div class="period-label" id="t-periodo-hub">Periodo del hub</div>
+      <div class="period-selector" id="period-selector">
+        <div class="period-opt" data-range="today" id="t-period-today">Hoy</div>
+        <div class="period-opt active" data-range="week" id="t-period-week">Semana</div>
+        <div class="period-opt" data-range="month" id="t-period-month">Mes</div>
+        <div class="period-opt" data-range="quarter" id="t-period-quarter">Q</div>
+        <div class="period-opt" data-range="year" id="t-period-year">Año</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="agent-list">
+
+    <div class="agent-card acc-violet">
+      <div class="help-icon" title="Métricas de Concierge">?</div>
+      <div class="agent-head">
+        <div class="agent-icon">OM</div>
+        <div>
+          <div class="agent-name">Concierge</div>
+          <div class="agent-desc" id="t-desc-concierge">agenda citas por WhatsApp</div>
+        </div>
+        <div class="agent-status" id="status-concierge">● <span id="t-activo-1">Activo</span></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-main">
+          <div class="agent-main-label" id="t-leads-label-1">Leads</div>
+          <div class="agent-main-val" id="concierge-leads">—</div>
+        </div>
+        <div class="agent-secondaries">
+          <div>
+            <div class="agent-sec-label" id="t-citas-confirmadas">Citas confirmadas</div>
+            <div class="agent-sec-val" id="concierge-citas">—</div>
+          </div>
+          <div>
+            <div class="agent-sec-label" id="t-booking-rate">Booking rate</div>
+            <div class="agent-sec-val" id="concierge-rate">—</div>
+          </div>
+          <div>
+            <div class="agent-sec-label" id="t-pipeline">Pipeline</div>
+            <div class="agent-sec-val" id="concierge-pipeline">—</div>
+          </div>
+        </div>
+        <div class="agent-trend">
+          <div class="agent-trend-label" id="t-tendencia-1">Tendencia</div>
+          <div class="agent-trend-empty" id="t-sin-datos-1">sin datos aún</div>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <a class="agent-cta" href="https://concierge.operamente.com" target="_blank"><span id="t-ver-analisis-1">Ver análisis completo</span> →</a>
+      </div>
+    </div>
+
+    <div class="agent-card acc-magenta">
+      <div class="help-icon" title="Métricas de Hunter">?</div>
+      <div class="agent-head">
+        <div class="agent-icon">OM</div>
+        <div>
+          <div class="agent-name">Hunter</div>
+          <div class="agent-desc" id="t-desc-hunter">prospección y scoring de leads</div>
+        </div>
+        <div class="agent-status" id="status-hunter">● <span id="t-activo-2">Activo</span></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-main">
+          <div class="agent-main-label" id="t-leads-label-2">Leads</div>
+          <div class="agent-main-val" id="hunter-leads">—</div>
+        </div>
+        <div class="agent-secondaries">
+          <div>
+            <div class="agent-sec-label" id="t-prioritarios">Prioritarios</div>
+            <div class="agent-sec-val" id="hunter-pri">—</div>
+          </div>
+          <div>
+            <div class="agent-sec-label" id="t-buenos">Buenos</div>
+            <div class="agent-sec-val" id="hunter-good">—</div>
+          </div>
+          <div>
+            <div class="agent-sec-label" id="t-contactados">Contactados</div>
+            <div class="agent-sec-val" id="hunter-contactados">—</div>
+          </div>
+        </div>
+        <div class="agent-trend">
+          <div class="agent-trend-label" id="t-tendencia-2">Tendencia</div>
+          <div class="agent-trend-empty" id="t-sin-datos-2">sin datos aún</div>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <a class="agent-cta" href="https://ls.operamente.com" target="_blank"><span id="t-ver-pipeline">Ver pipeline completo</span> →</a>
+      </div>
+    </div>
+
+    <div class="agent-card acc-lila">
+      <div class="help-icon" title="Métricas de Vera">?</div>
+      <div class="agent-head">
+        <div class="agent-icon">OM</div>
+        <div>
+          <div class="agent-name">Vera</div>
+          <div class="agent-desc" id="t-desc-vera">agente de voz inmobiliario</div>
+        </div>
+        <div class="agent-status demo" id="status-vera">● <span id="t-pendiente">Pendiente</span></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-main">
+          <div class="agent-main-label" id="t-llamadas-label">Llamadas</div>
+          <div class="agent-main-val">—</div>
+        </div>
+        <div class="agent-secondaries">
+          <div>
+            <div class="agent-sec-label" id="t-calificacion">Calificación</div>
+            <div class="agent-sec-val">—</div>
+          </div>
+          <div>
+            <div class="agent-sec-label" id="t-entregados">Entregados</div>
+            <div class="agent-sec-val">—</div>
+          </div>
+          <div>
+            <div class="agent-sec-label" id="t-duracion-prom">Duración prom.</div>
+            <div class="agent-sec-val">—</div>
+          </div>
+        </div>
+        <div class="agent-trend">
+          <div class="agent-trend-label" id="t-tendencia-3">Tendencia</div>
+          <div class="agent-trend-empty" id="t-en-construccion">dashboard en construcción</div>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <span class="agent-cta" style="opacity:0.5;cursor:default;" id="t-proximamente">Próximamente →</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://qlttzanvtjnougnkhuuk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsdHR6YW52dGpub3VnbmtodXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjk3NjIsImV4cCI6MjA5MDY0NTc2Mn0.eVkLGYANWJoGFq3VWhFMocM6SeYZ41CrVQ_FYXMPleA';
+const CONCIERGE_WEBHOOK = 'https://operamente-n8n.jdray1.easypanel.host/webhook/hub-resumen-concierge';
+
+const T = {
+  es: {
+    login_title: 'Hub Operamente', login_sub: 'Acceso restringido · Operamente',
+    login_label: 'Contraseña', login_btn: 'Ingresar', login_error: 'Contraseña incorrecta',
+    agentes_activos: 'Agentes activos', ultima_actividad: 'Última actividad',
+    periodo_hub: 'Periodo del hub',
+    period_today: 'Hoy', period_week: 'Semana', period_month: 'Mes', period_quarter: 'Q', period_year: 'Año',
+    desc_concierge: 'agenda citas por WhatsApp', desc_hunter: 'prospección y scoring de leads', desc_vera: 'agente de voz inmobiliario',
+    activo: 'Activo', pendiente: 'Pendiente',
+    leads_label: 'Leads', citas_confirmadas: 'Citas confirmadas', booking_rate: 'Booking rate', pipeline: 'Pipeline',
+    prioritarios: 'Prioritarios', buenos: 'Buenos', contactados: 'Contactados',
+    llamadas_label: 'Llamadas', calificacion: 'Calificación', entregados: 'Entregados', duracion_prom: 'Duración prom.',
+    tendencia: 'Tendencia', sin_datos: 'sin datos aún', en_construccion: 'dashboard en construcción',
+    ver_analisis: 'Ver análisis completo', ver_pipeline: 'Ver pipeline completo', proximamente: 'Próximamente',
+    actividad_sin_datos: 'Sin actividad reciente registrada',
+  },
+  en: {
+    login_title: 'Operamente Hub', login_sub: 'Restricted access · Operamente',
+    login_label: 'Password', login_btn: 'Sign in', login_error: 'Incorrect password',
+    agentes_activos: 'Active agents', ultima_actividad: 'Last activity',
+    periodo_hub: 'Hub period',
+    period_today: 'Today', period_week: 'Week', period_month: 'Month', period_quarter: 'Q', period_year: 'Year',
+    desc_concierge: 'books appointments via WhatsApp', desc_hunter: 'prospecting and lead scoring', desc_vera: 'real estate voice agent',
+    activo: 'Active', pendiente: 'Pending',
+    leads_label: 'Leads', citas_confirmadas: 'Confirmed appointments', booking_rate: 'Booking rate', pipeline: 'Pipeline',
+    prioritarios: 'Priority', buenos: 'Good fit', contactados: 'Contacted',
+    llamadas_label: 'Calls', calificacion: 'Qualification', entregados: 'Delivered', duracion_prom: 'Avg. duration',
+    tendencia: 'Trend', sin_datos: 'no data yet', en_construccion: 'dashboard under construction',
+    ver_analisis: 'View full analytics', ver_pipeline: 'View full pipeline', proximamente: 'Coming soon',
+    actividad_sin_datos: 'No recent activity recorded',
+  }
+};
+let currentLang = 'es';
+let currentRange = 'week';
+function t(key) { return T[currentLang]?.[key] ?? key; }
+
+const LOGIN_PASSWORD = "Operamente2026";
+function loginSubmit() {
+  const val = document.getElementById("login-input").value;
+  const inp = document.getElementById("login-input");
+  const err = document.getElementById("login-error");
+  if (val === LOGIN_PASSWORD) {
+    sessionStorage.setItem("om_auth","1");
+    document.getElementById("login-gate").classList.add("hidden");
+    document.getElementById("app").style.display = "block";
+    initApp();
+  } else {
+    inp.classList.remove("error"); void inp.offsetWidth; inp.classList.add("error");
+    err.textContent = t('login_error'); inp.value="";
+    setTimeout(()=>inp.classList.remove("error"),500);
+  }
+}
+function checkAuth() {
+  currentLang = localStorage.getItem('om_lang') || 'es';
+  const theme = localStorage.getItem('om_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  if (sessionStorage.getItem("om_auth")==="1") {
+    document.getElementById("login-gate").classList.add("hidden");
+    document.getElementById("app").style.display = "block";
+    initApp();
+  } else {
+    document.getElementById('lang-es')?.classList.toggle('on', currentLang === 'es');
+    document.getElementById('lang-en')?.classList.toggle('on', currentLang === 'en');
+    applyLoginLang();
+    document.getElementById("login-input").focus();
+  }
+}
+function applyLoginLang() {
+  document.getElementById('t-login-title').textContent = t('login_title');
+  document.getElementById('t-login-sub').textContent = t('login_sub');
+  document.getElementById('t-login-label').textContent = t('login_label');
+  document.getElementById('t-login-btn').textContent = t('login_btn');
+}
+
+function setTheme(th) {
+  document.documentElement.setAttribute('data-theme', th);
+  localStorage.setItem('om_theme', th);
+  const d = th === 'dark';
+  document.getElementById('theme-icon').textContent = d ? '☀' : '☾';
+  document.getElementById('theme-label').textContent = d ? (currentLang==='en'?'Light':'Claro') : (currentLang==='en'?'Dark':'Oscuro');
+}
+function toggleTheme(){ setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); }
+
+function setLang(l) {
+  currentLang = l;
+  localStorage.setItem('om_lang', l);
+  document.getElementById('lang-es')?.classList.toggle('on', l === 'es');
+  document.getElementById('lang-en')?.classList.toggle('on', l === 'en');
+  applyLang();
+}
+function toggleLang(){ setLang((localStorage.getItem('om_lang')||'es')==='es'?'en':'es'); }
+
+function applyLang() {
+  const map = {
+    't-agentes-activos':'agentes_activos','t-ultima-actividad':'ultima_actividad','t-periodo-hub':'periodo_hub',
+    't-period-today':'period_today','t-period-week':'period_week','t-period-month':'period_month',
+    't-period-quarter':'period_quarter','t-period-year':'period_year',
+    't-desc-concierge':'desc_concierge','t-desc-hunter':'desc_hunter','t-desc-vera':'desc_vera',
+    't-activo-1':'activo','t-activo-2':'activo','t-pendiente':'pendiente',
+    't-leads-label-1':'leads_label','t-leads-label-2':'leads_label','t-llamadas-label':'llamadas_label',
+    't-citas-confirmadas':'citas_confirmadas','t-booking-rate':'booking_rate','t-pipeline':'pipeline',
+    't-prioritarios':'prioritarios','t-buenos':'buenos','t-contactados':'contactados',
+    't-calificacion':'calificacion','t-entregados':'entregados','t-duracion-prom':'duracion_prom',
+    't-tendencia-1':'tendencia','t-tendencia-2':'tendencia','t-tendencia-3':'tendencia',
+    't-sin-datos-1':'sin_datos','t-sin-datos-2':'sin_datos','t-en-construccion':'en_construccion',
+    't-ver-analisis-1':'ver_analisis','t-ver-pipeline':'ver_pipeline','t-proximamente':'proximamente',
+  };
+  Object.entries(map).forEach(([id,key])=>{ const el=document.getElementById(id); if(el) el.textContent=t(key); });
+  setTheme(document.documentElement.getAttribute('data-theme'));
+  updateDateLocale();
+  const actEl = document.getElementById('sum-actividad');
+  if (actEl && (actEl.textContent === '—' || actEl.textContent === T.es.actividad_sin_datos || actEl.textContent === T.en.actividad_sin_datos)) {
+    actEl.textContent = t('actividad_sin_datos');
+  }
+}
+
+function updateDateLocale() {
+  const now = new Date();
+  const locale = currentLang === 'en' ? 'en-US' : 'es-ES';
+  document.getElementById('topbar-date').textContent = now.toLocaleDateString(locale,{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+}
+
+function initApp() {
+  setLang(currentLang);
+  document.getElementById('period-selector').addEventListener('click', (e)=>{
+    const opt = e.target.closest('.period-opt');
+    if (!opt) return;
+    document.querySelectorAll('.period-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    currentRange = opt.dataset.range;
+    loadConcierge(); loadHunter();
+  });
+  loadConcierge();
+  loadHunter();
+}
+checkAuth();
+
+// CONCIERGE — via webhook n8n
+async function loadConcierge() {
+  try {
+    const res = await fetch(`${CONCIERGE_WEBHOOK}?range=${currentRange}`);
+    const d = await res.json();
+    document.getElementById('concierge-leads').textContent = d.leads ?? '—';
+    document.getElementById('concierge-citas').textContent = d.citas_confirmadas ?? '—';
+    document.getElementById('concierge-rate').textContent = (d.booking_rate != null) ? d.booking_rate + '%' : '—';
+    document.getElementById('concierge-pipeline').textContent = (d.pipeline_eur != null) ? Number(d.pipeline_eur).toLocaleString(currentLang==='en'?'en-US':'es-ES') + ' EUR' : '—';
+  } catch(e) {
+    console.error('Error cargando Concierge', e);
+  }
+}
+
+// HUNTER — lectura directa a Supabase (RLS solo lectura, anon key)
+function fechaDesde(range) {
+  const now = new Date();
+  const d = new Date(now);
+  if (range === 'today') d.setHours(0,0,0,0);
+  else if (range === 'week') d.setDate(now.getDate()-7);
+  else if (range === 'month') d.setDate(now.getDate()-30);
+  else if (range === 'quarter') d.setDate(now.getDate()-90);
+  else if (range === 'year') d.setDate(now.getDate()-365);
+  else d.setDate(now.getDate()-7);
+  return d.toISOString();
+}
+
+async function loadHunter() {
+  try {
+    const desde = fechaDesde(currentRange);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leads?select=banda,estado&created_at=gte.${desde}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const leads = await res.json();
+    if (!Array.isArray(leads)) throw new Error('respuesta inesperada');
+    const total = leads.length;
+    const pri = leads.filter(l=>l.banda==='Priority').length;
+    const good = leads.filter(l=>l.banda==='Good').length;
+    const contactados = leads.filter(l=>l.estado && l.estado !== 'Nuevo').length;
+    document.getElementById('hunter-leads').textContent = total;
+    document.getElementById('hunter-pri').textContent = pri;
+    document.getElementById('hunter-good').textContent = good;
+    document.getElementById('hunter-contactados').textContent = contactados;
+  } catch(e) {
+    console.error('Error cargando Hunter', e);
+  }
+}
+</script>
+</body>
+</html>
