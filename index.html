@@ -180,7 +180,8 @@ body {
 [data-theme="light"] .panel-cta.cta-magenta { color:#C2257E; }
 [data-theme="light"] .panel-cta.cta-neutro  { color:var(--tx-sub); }
 .panel-trend { border-top:0.5px solid var(--glass-b2); padding-top:16px; }
-.trend-eje { display:flex; justify-content:space-between; margin-top:6px; font-size:9px; color:var(--tx-faint); letter-spacing:0.2px; }
+.trend-eje { position:relative; height:14px; margin-top:4px; font-size:9px; color:var(--tx-faint); letter-spacing:0.2px; }
+.trend-eje span { position:absolute; top:0; white-space:nowrap; }
 .panel-trend-head { display:flex; justify-content:space-between; margin-bottom:10px; align-items:center; }
 .panel-trend-lbl { font-size:9px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px; }
 .panel-trend-gran { font-size:9px; color:var(--tx-faint); }
@@ -615,7 +616,6 @@ function renderAgentTiles() {
                   <div class="help-box">${t('help_tendencia')}</div>
                 </div>
               </div>
-              <div class="panel-trend-gran" id="panel-gran-${agente.id}"></div>
             </div>
             <div id="panel-chart-${agente.id}"></div>
           </div>
@@ -771,16 +771,31 @@ function applyLang() {
 
 /* ============================================================
    SECCIÓN F — GRANULARIDAD POR RANGO (genérico)
-   Define cuántos puntos de tendencia mostrar y qué representa
-   cada uno, según el periodo seleccionado arriba en el Hub.
+   Define la UNIDAD de cada punto (hora/día/semana/mes) según el
+   periodo. La CANTIDAD de puntos ya no es fija — se calcula con
+   calcularCantidadPuntos() porque los periodos ahora son de
+   calendario real (mes actual, trimestre fiscal, año actual),
+   que no siempre tienen el mismo número de días/semanas.
    ============================================================ */
 const GRANULARIDAD = {
-  today:   { puntos: 24, unidad: 'hour',  labelKey: 'gran_today' },
-  week:    { puntos: 7,  unidad: 'day',   labelKey: 'gran_week' },
-  month:   { puntos: 30, unidad: 'day',   labelKey: 'gran_month' },
-  quarter: { puntos: 13, unidad: 'week',  labelKey: 'gran_quarter' },
-  year:    { puntos: 12, unidad: 'month', labelKey: 'gran_year' },
+  today:   { unidad: 'hour',  labelKey: 'gran_today' },
+  week:    { unidad: 'day',   labelKey: 'gran_week' },
+  month:   { unidad: 'day',   labelKey: 'gran_month' },
+  quarter: { unidad: 'week',  labelKey: 'gran_quarter' },
+  year:    { unidad: 'month', labelKey: 'gran_year' },
 };
+
+/* Cuántos puntos tiene el periodo calendario real activo, contando
+   desde su inicio (lunes/día 1/inicio de Q/1 de enero) hasta hoy. */
+function calcularCantidadPuntos(range) {
+  const { unidad } = GRANULARIDAD[range];
+  const desde = new Date(fechaDesde(range));
+  const ahora = new Date();
+  if (unidad === 'hour')  return Math.max(2, Math.floor((ahora - desde) / 3600000) + 1);
+  if (unidad === 'day')   return Math.max(2, Math.floor((ahora - desde) / 86400000) + 1);
+  if (unidad === 'week')  return Math.max(2, Math.floor((ahora - desde) / (86400000*7)) + 1);
+  return Math.max(2, (ahora.getFullYear() - desde.getFullYear()) * 12 + (ahora.getMonth() - desde.getMonth()) + 1);
+}
 
 function formatVal(valor, formato) {
   if (valor === null || valor === undefined) return '—';
@@ -803,49 +818,73 @@ function renderTrendSVG(containerId, valores) {
   const w = 560, h = 60, max = Math.max(...valores), min = Math.min(...valores);
   const range = (max - min) || 1;
   const step = w / (valores.length - 1);
-  const points = valores.map((v, i) => {
-    const x = Math.round(i * step);
-    const y = Math.round(h - 6 - ((v - min) / range) * (h - 12));
-    return `${x},${y}`;
-  }).join(' ');
-  const lastX = w, lastY = Math.round(h - 6 - ((valores[valores.length-1] - min) / range) * (h - 12));
-  const ejeFechas = generarEjeFechas(valores.length);
+  const xDe = (i) => Math.round(i * step);
+  const yDe = (v) => Math.round(h - 6 - ((v - min) / range) * (h - 12));
+  const points = valores.map((v, i) => `${xDe(i)},${yDe(v)}`).join(' ');
+  const lastI = valores.length - 1;
+
+  const marcadores = generarMarcadoresCalendario(valores.length);
+  const lineasGuia = marcadores.map(m =>
+    `<line x1="${xDe(m.indice)}" y1="0" x2="${xDe(m.indice)}" y2="${h}" stroke="currentColor" stroke-width="1" stroke-dasharray="2 3" opacity="0.18"/>`
+  ).join('');
+  const etiquetas = marcadores.map(m =>
+    `<span style="position:absolute; left:${(xDe(m.indice)/w*100)}%; transform:translateX(${m.indice===0?'0%':m.indice===lastI?'-100%':'-50%'})">${m.label}</span>`
+  ).join('');
+
   el.innerHTML = `
-    <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-      <polyline points="${points}" fill="none" stroke="#B98FF0" stroke-width="2"/>
-      <circle cx="${lastX}" cy="${lastY}" r="4" fill="#F52F83"/>
-    </svg>
-    <div class="trend-eje">
-      <span>${ejeFechas.inicio}</span>
-      ${ejeFechas.medio ? `<span>${ejeFechas.medio}</span>` : ''}
-      <span>${ejeFechas.fin}</span>
+    <div style="position:relative; color:var(--tx-faint);">
+      <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        ${lineasGuia}
+        <polyline points="${points}" fill="none" stroke="#B98FF0" stroke-width="2"/>
+        <circle cx="${xDe(lastI)}" cy="${yDe(valores[lastI])}" r="4" fill="#F52F83"/>
+      </svg>
+      <div class="trend-eje">${etiquetas}</div>
     </div>`;
 }
 
-/* Calcula las etiquetas del eje horizontal (inicio / medio / fin)
-   según el rango activo y cuántos puntos tiene la serie — genérico,
-   funciona igual para cualquier agente. */
-function generarEjeFechas(cantidadPuntos) {
+/* Calcula en qué índices de la serie cae cada "marca natural" de
+   calendario (inicio de semana, de mes, de trimestre, según la
+   unidad activa) y la etiqueta de fecha correspondiente — para
+   dibujar una línea guía exactamente sobre esos puntos reales,
+   nunca interpolada ni inventada entre dos puntos. */
+function generarMarcadoresCalendario(cantidadPuntos) {
   const { unidad } = GRANULARIDAD[currentRange];
   const locale = currentLang === 'en' ? 'en-US' : 'es-ES';
-  const ahora = new Date();
-  const fechaDe = (pasosAtras) => {
-    const f = new Date(ahora);
-    if (unidad === 'hour') f.setHours(f.getHours() - pasosAtras);
-    else if (unidad === 'day') f.setDate(f.getDate() - pasosAtras);
-    else if (unidad === 'week') f.setDate(f.getDate() - pasosAtras * 7);
-    else f.setMonth(f.getMonth() - pasosAtras);
+  const desde = new Date(fechaDesde(currentRange));
+  const marcadores = [];
+
+  const fechaDelIndice = (i) => {
+    const f = new Date(desde);
+    if (unidad === 'hour') f.setHours(f.getHours() + i);
+    else if (unidad === 'day') f.setDate(f.getDate() + i);
+    else if (unidad === 'week') f.setDate(f.getDate() + i * 7);
+    else f.setMonth(f.getMonth() + i);
     return f;
   };
   const formatoCorto = (f) => {
-    if (unidad === 'hour') return f.toLocaleTimeString(locale, { hour: '2-digit', minute:'2-digit' });
-    if (unidad === 'month') return f.toLocaleDateString(locale, { month: 'short', year:'2-digit' });
-    return f.toLocaleDateString(locale, { day:'2-digit', month:'short' });
+    if (unidad === 'hour') return f.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+    if (unidad === 'month') return f.toLocaleDateString(locale, { month: 'short' });
+    return f.toLocaleDateString(locale, { day: '2-digit', month: 'short' });
   };
-  const inicio = formatoCorto(fechaDe(cantidadPuntos - 1));
-  const fin = formatoCorto(fechaDe(0));
-  const medio = cantidadPuntos >= 6 ? formatoCorto(fechaDe(Math.floor((cantidadPuntos - 1) / 2))) : null;
-  return { inicio, medio, fin };
+
+  for (let i = 0; i < cantidadPuntos; i++) {
+    const esUltimo = i === cantidadPuntos - 1;
+    const f = esUltimo ? new Date() : fechaDelIndice(i);
+    let esMarcaNatural = false;
+    if (i === 0 || esUltimo) esMarcaNatural = true; // siempre inicio y fin
+    else if (unidad === 'day' && f.getDay() === 1) esMarcaNatural = true; // cada lunes
+    else if (unidad === 'week' && f.getDate() <= 7) esMarcaNatural = true; // cada inicio de mes
+    else if (unidad === 'month' && f.getMonth() % 3 === 0) esMarcaNatural = true; // cada inicio de Q
+    else if (unidad === 'hour' && f.getHours() % 6 === 0) esMarcaNatural = true; // cada 6 horas
+
+    if (esMarcaNatural) marcadores.push({ indice: i, label: formatoCorto(f) });
+  }
+  // Evitar amontonamiento: si dos marcas quedan muy cerca (< 8% del ancho), se queda la más relevante
+  return marcadores.filter((m, idx) => {
+    if (idx === 0) return true;
+    const anterior = marcadores[idx - 1];
+    return (m.indice - anterior.indice) / cantidadPuntos > 0.08 || idx === marcadores.length - 1;
+  });
 }
 
 /* ============================================================
@@ -876,7 +915,6 @@ function pintarAgente(agente, datos) {
   document.getElementById(`tile-main-${agente.id}`).textContent = main;
   document.getElementById(`panel-main-${agente.id}`).textContent = main;
   document.getElementById(`panel-rangelbl-${agente.id}`).textContent = t('period_' + currentRange).toLowerCase();
-  document.getElementById(`panel-gran-${agente.id}`).textContent = t(GRANULARIDAD[currentRange].labelKey);
 
   agente.secundarias.forEach(s => {
     const el = document.getElementById(`panel-${s.clave}-${agente.id}`);
@@ -903,12 +941,26 @@ async function fetchWebhookResumen(agente) {
 function fechaDesde(range) {
   const now = new Date();
   const d = new Date(now);
-  if (range === 'today') d.setHours(0,0,0,0);
-  else if (range === 'week') d.setDate(now.getDate()-7);
-  else if (range === 'month') d.setDate(now.getDate()-30);
-  else if (range === 'quarter') d.setDate(now.getDate()-90);
-  else if (range === 'year') d.setDate(now.getDate()-365);
-  else d.setDate(now.getDate()-7);
+  d.setHours(0, 0, 0, 0);
+  if (range === 'today') {
+    /* ya está en 00:00 de hoy */
+  } else if (range === 'week') {
+    /* Lunes de esta semana. getDay(): 0=domingo...6=sábado */
+    const diaSemana = d.getDay();
+    const diasDesdeLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+    d.setDate(d.getDate() - diasDesdeLunes);
+  } else if (range === 'month') {
+    d.setDate(1);
+  } else if (range === 'quarter') {
+    const mesActual = d.getMonth(); // 0-11
+    const inicioTrimestre = Math.floor(mesActual / 3) * 3; // 0, 3, 6, 9
+    d.setMonth(inicioTrimestre, 1);
+  } else if (range === 'year') {
+    d.setMonth(0, 1);
+  } else {
+    const diaSemana = d.getDay();
+    d.setDate(d.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
+  }
   return d.toISOString();
 }
 
@@ -931,7 +983,8 @@ async function fetchSupabaseResumen(agente) {
 /* Agrupa timestamps en buckets según la granularidad activa — genérico,
    lo puede usar cualquier fuente que devuelva una lista de timestamps */
 function agruparPorIntervalo(timestamps, range) {
-  const { puntos, unidad } = GRANULARIDAD[range];
+  const { unidad } = GRANULARIDAD[range];
+  const puntos = calcularCantidadPuntos(range);
   const buckets = new Array(puntos).fill(0);
   const ahora = new Date();
   timestamps.forEach(ts => {
