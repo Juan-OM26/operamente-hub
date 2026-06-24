@@ -231,9 +231,9 @@ body {
   .summary-top { flex-direction:column; align-items:flex-start; gap:16px; }
   .agent-grid { grid-template-columns:1fr; }
   .agent-tile { aspect-ratio:auto; min-height:140px; }
-  .panel-top { flex-direction:column; align-items:flex-start; gap:16px; }
-  .panel-secondaries { gap:22px; }
-  .panel-cta { align-self:flex-end; margin-top:-30px; }
+  .panel-top { flex-direction:column; align-items:stretch; gap:16px; }
+  .panel-secondaries { gap:18px 22px; width:100%; }
+  .panel-cta { align-self:flex-end; margin-top:0; }
 }
 </style>
 </head>
@@ -717,13 +717,29 @@ function cerrarTooltipActivo() {
 }
 
 document.addEventListener('mouseenter', (e) => {
+  if (window.matchMedia('(hover: none)').matches) return; /* en mobile el tap maneja esto, ver abajo */
   const wrap = e.target.closest ? e.target.closest('.help-wrap') : null;
   if (wrap) abrirTooltip(wrap);
 }, true);
 
 document.addEventListener('mouseleave', (e) => {
+  if (window.matchMedia('(hover: none)').matches) return;
   const wrap = e.target.closest ? e.target.closest('.help-wrap') : null;
   if (wrap && wrap === tooltipActivo) cerrarTooltipActivo();
+}, true);
+
+/* En mobile no hay hover real: el tap en el botón ? abre/cierra su
+   tooltip, y el tap en cualquier otro lugar cierra el que esté abierto. */
+document.addEventListener('click', (e) => {
+  if (!window.matchMedia('(hover: none)').matches) return; /* en desktop esto lo maneja el hover de arriba */
+  const wrap = e.target.closest('.help-wrap');
+  if (wrap) {
+    e.stopPropagation();
+    if (tooltipActivo === wrap) cerrarTooltipActivo();
+    else abrirTooltip(wrap);
+    return;
+  }
+  if (tooltipActivo) cerrarTooltipActivo();
 }, true);
 
 
