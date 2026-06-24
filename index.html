@@ -109,7 +109,9 @@ body {
 .period-opt:hover { color:var(--tx-sub); }
 .period-opt.active { color:#fff; background:var(--grad); box-shadow:0 0 18px rgba(124,63,237,0.4); font-weight:500; }
 
-/* ── 6. HELP TOOLTIP (?) — mismo patrón que Hunter, puro CSS hover ── */
+/* ── 6. HELP TOOLTIP (?) — mismo patrón que Hunter, puro CSS hover.
+   Se centra respecto al botón por defecto; JS (ajustarTooltips) corrige
+   la posición si el cuadro se saldría de la pantalla por algún borde. */
 .help-wrap { position:relative; display:inline-flex; align-items:center; flex-shrink:0; }
 .help-btn {
   width:16px; height:16px; border-radius:50%; border:0.5px solid var(--tx-mut); background:transparent;
@@ -118,12 +120,12 @@ body {
 }
 .help-wrap:hover .help-btn { opacity:1; }
 .help-box {
-  display:none; position:absolute; top:calc(100% + 8px); right:0; width:240px;
+  display:none; position:fixed; width:240px;
   background:var(--bg); border:0.5px solid var(--glass-b); border-radius:10px; padding:13px 15px;
   font-size:11px; color:var(--tx-sub); line-height:1.6; z-index:9999;
   box-shadow:0 12px 32px rgba(0,0,0,0.5); pointer-events:none;
 }
-[data-theme="light"] .help-box { background:#fff; box-shadow:0 12px 32px rgba(0,0,0,0.15); }
+[data-theme="light"] .help-box { background:#fff; border-color:rgba(20,10,40,0.12); box-shadow:0 12px 32px rgba(0,0,0,0.15); }
 .help-wrap:hover .help-box { display:block; }
 
 /* ── 7. AGENT TILE (reposo) ── */
@@ -167,8 +169,13 @@ body {
 .panel-secondaries { flex:1; display:flex; gap:30px; flex-wrap:wrap; }
 .panel-sec-lbl { font-size:9px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
 .panel-sec-val { font-size:16px; color:var(--tx-sub); font-weight:300; }
-.panel-cta { font-size:12px; color:#D9C8FB; font-weight:500; display:flex; align-items:center; gap:6px; white-space:nowrap; align-self:flex-start; margin-top:4px; text-decoration:none; }
-[data-theme="light"] .panel-cta { color:#6A2DE2; }
+.panel-cta { font-size:12px; font-weight:500; display:flex; align-items:center; gap:6px; white-space:nowrap; align-self:flex-start; margin-top:4px; text-decoration:none; }
+.panel-cta.cta-violeta { color:#D9C8FB; }
+.panel-cta.cta-magenta { color:#F5C2DC; }
+.panel-cta.cta-neutro  { color:var(--tx-sub); }
+[data-theme="light"] .panel-cta.cta-violeta { color:#6A2DE2; }
+[data-theme="light"] .panel-cta.cta-magenta { color:#C2257E; }
+[data-theme="light"] .panel-cta.cta-neutro  { color:var(--tx-sub); }
 .panel-trend { border-top:0.5px solid var(--glass-b2); padding-top:16px; }
 .panel-trend-head { display:flex; justify-content:space-between; margin-bottom:10px; align-items:center; }
 .panel-trend-lbl { font-size:9px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px; }
@@ -203,7 +210,15 @@ body {
 .login-btn:hover { opacity:0.9; transform:translateY(-1px); }
 .login-footer { font-size:10px; color:var(--tx-faint); letter-spacing:0.1em; }
 
-/* ── 11. RESPONSIVE / MOBILE ──
+/* ── 12. FOOTER "POWERED BY OPERAMENTE" ──
+   Esta franja es la marca de Operamente como proveedor del Hub.
+   Se mantiene igual al instalar el template para un cliente nuevo. */
+.hub-footer { margin-top:40px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+.hub-footer-line { width:100%; height:0.5px; background:var(--glass-b2); }
+.hub-footer-text { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--tx-faint); letter-spacing:0.3px; }
+#footer-logo { height:16px; opacity:0.55; }
+
+/* ── 13. RESPONSIVE / MOBILE ──
    En mobile no hay hover real, por eso el panel se abre/cierra con
    tap (vía JS, función onTileTap -> abrirPanel). Layout pasa a
    columna única para los tiles; el panel sigue a ancho completo. */
@@ -293,6 +308,17 @@ body {
        2) la grid de tiles (abajo, siempre visible).
        ============================================================ -->
   <div id="agents-container"></div>
+
+  <!-- ── FOOTER — "Powered by Operamente". Para un cliente nuevo,
+       este footer se mantiene igual (es la marca de Operamente como
+       proveedor, no la del cliente). ── -->
+  <div class="hub-footer">
+    <div class="hub-footer-line"></div>
+    <div class="hub-footer-text">
+      <span id="t-powered-by">Powered by</span>
+      <img src="https://operamente-github.jdray1.easypanel.host/logo/Operamente.png" alt="Operamente" id="footer-logo">
+    </div>
+  </div>
 
 </div>
 </div>
@@ -389,7 +415,7 @@ const T = {
     help_tendencia: 'Evolución del valor principal a lo largo del periodo seleccionado. Cada punto representa una porción de tiempo: por hora si ves "Hoy", por día en "Semana" o "Mes", por semana en "Q", por mes en "Año".',
     gran_today: '1 punto = 1 hora', gran_week: '1 punto = 1 día', gran_month: '1 punto = 1 día',
     gran_quarter: '1 punto = 1 semana', gran_year: '1 punto = 1 mes',
-    leads_label: 'leads', llamadas_label: 'llamadas',
+    leads_label: 'leads', llamadas_label: 'llamadas', powered_by: 'Powered by',
   },
   en: {
     login_title: 'Operamente Hub', login_sub: 'Restricted access · Operamente',
@@ -405,7 +431,7 @@ const T = {
     help_tendencia: 'Evolution of the main value across the selected period. Each point represents a slice of time: hourly for "Today", daily for "Week" or "Month", weekly for "Q", monthly for "Year".',
     gran_today: '1 point = 1 hour', gran_week: '1 point = 1 day', gran_month: '1 point = 1 day',
     gran_quarter: '1 point = 1 week', gran_year: '1 point = 1 month',
-    leads_label: 'leads', llamadas_label: 'calls',
+    leads_label: 'leads', llamadas_label: 'calls', powered_by: 'Powered by',
   }
 };
 let currentLang = 'es';
@@ -470,6 +496,8 @@ function setTheme(th) {
     : 'https://operamente-github.jdray1.easypanel.host/logo/Operamente-dark.png';
   const logoEl = document.getElementById('header-logo');
   if (logoEl) logoEl.src = logoSrc;
+  const footerLogoEl = document.getElementById('footer-logo');
+  if (footerLogoEl) footerLogoEl.src = logoSrc;
   const loginLogoEl = document.getElementById('login-logo');
   if (loginLogoEl) loginLogoEl.src = logoSrc;
 }
@@ -559,7 +587,7 @@ function renderAgentTiles() {
                 </div>
               `).join('')}
             </div>
-            ${agente.urlCompleto ? `<a class="panel-cta" href="${agente.urlCompleto}" target="_blank" style="color:${c.cta}">${t('ver_completo')}<span>→</span></a>` : ''}
+            ${agente.urlCompleto ? `<a class="panel-cta cta-${agente.color}" href="${agente.urlCompleto}?from=hub" target="_blank" data-agente-link="${agente.id}">${t('ver_completo')}<span>→</span></a>` : ''}
           </div>
           <div class="panel-trend">
             <div class="panel-trend-head">
@@ -629,6 +657,24 @@ document.addEventListener('click', (e) => {
   if (!dentroDeTile && !dentroDePanel) cerrarPanel();
 });
 
+/* ── TOOLTIP (?) — posicionamiento dinámico para que nunca se corte
+   en los bordes de la pantalla, mismo patrón que ya usa Hunter ── */
+document.addEventListener('mouseover', (e) => {
+  const wrap = e.target.closest('.help-wrap');
+  if (!wrap) return;
+  const box = wrap.querySelector('.help-box');
+  const btn = wrap.querySelector('.help-btn');
+  if (!box || !btn) return;
+  const bRect = btn.getBoundingClientRect();
+  const boxW = 240;
+  const margen = 16;
+  let left = bRect.left + (bRect.width / 2) - (boxW / 2);
+  left = Math.max(margen, Math.min(left, window.innerWidth - boxW - margen));
+  let top = bRect.bottom + 8;
+  box.style.left = `${left}px`;
+  box.style.top = `${top}px`;
+});
+
 
 
 /* ============================================================
@@ -643,6 +689,7 @@ function applyLang() {
   document.getElementById('t-period-month').textContent = t('period_month');
   document.getElementById('t-period-quarter').textContent = t('period_quarter');
   document.getElementById('t-period-year').textContent = t('period_year');
+  document.getElementById('t-powered-by').textContent = t('powered_by');
   setTheme(document.documentElement.getAttribute('data-theme'));
   updateDateLocale();
 
