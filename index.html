@@ -123,11 +123,13 @@ body {
 .help-box {
   display:none; position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%);
   width:240px; background:var(--bg); border:0.5px solid var(--glass-b); border-radius:10px; padding:13px 15px;
-  font-size:11px; color:var(--tx-sub); line-height:1.6; z-index:9999;
+  font-size:11px; font-weight:400; color:var(--tx-sub); line-height:1.6; z-index:9999;
   box-shadow:0 12px 32px rgba(0,0,0,0.5); pointer-events:none;
+  text-transform:none; letter-spacing:normal; font-family:'Inter',sans-serif;
 }
 [data-theme="light"] .help-box { background:#fff; border-color:rgba(20,10,40,0.12); box-shadow:0 12px 32px rgba(0,0,0,0.15); }
 .help-wrap:hover .help-box { display:block; }
+.help-box-fixed { display:block !important; position:fixed !important; transform:none !important; }
 
 /* ── 7. AGENT TILE (reposo) ── */
 .agent-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:0; }
@@ -533,7 +535,20 @@ const COLOR_MAP = {
   neutro:  { tileBg:'rgba(255,255,255,0.04)', tileB:'rgba(255,255,255,0.08)', iconGlow:'none', panelBg:'rgba(255,255,255,0.04)', panelB:'rgba(255,255,255,0.1)', cta:'rgba(255,255,255,0.6)' },
 };
 
+/* Estado del tooltip (?) que se mueve temporalmente al <body> para
+   escapar del overflow:hidden de .agent-panel — declarado aquí,
+   antes de cualquier función que lo use, para mayor claridad. */
+let tooltipOriginalParent = null;
+let tooltipOriginalNextSibling = null;
+let tooltipActivo = null;
+
 function renderAgentTiles() {
+  /* Seguridad: si algún tooltip quedó movido al <body> (caso raro:
+     cambio de idioma/tema justo durante un hover), lo removemos
+     antes de regenerar el HTML para no dejar nodos huérfanos. */
+  document.querySelectorAll('.help-box-fixed').forEach(box => box.remove());
+  tooltipActivo = null;
+
   const container = document.getElementById('agents-container');
 
   const tiles = AGENTES.map(agente => {
@@ -658,30 +673,46 @@ document.addEventListener('click', (e) => {
   if (!dentroDeTile && !dentroDePanel) cerrarPanel();
 });
 
-/* ── TOOLTIP (?) — el CSS ya centra el cuadro debajo del botón por
-   defecto (funciona siempre). Este script SOLO interviene cuando
-   ese centrado se saldría de la pantalla por izquierda o derecha,
-   reemplazando el centrado por un valor en píxeles que sí cabe. ── */
+/* ── TOOLTIP (?) — el CSS centra el cuadro debajo del botón por
+   defecto. Pero como algunos "?" viven dentro de .agent-panel
+   (que tiene overflow:hidden para su animación de altura), el
+   tooltip se recortaría ahí. Por eso, al abrir, lo movemos
+   temporalmente a <body> con position:fixed — así escapa de
+   cualquier overflow:hidden de sus ancestros — y lo devolvemos
+   a su lugar original al cerrar. */
 document.addEventListener('mouseover', (e) => {
   const wrap = e.target.closest('.help-wrap');
-  if (!wrap) return;
+  if (!wrap || wrap === tooltipActivo) return;
   const box = wrap.querySelector('.help-box');
   const btn = wrap.querySelector('.help-btn');
   if (!box || !btn) return;
-  box.style.left = '';
-  box.style.transform = '';
+
+  tooltipActivo = wrap;
+  tooltipOriginalParent = box.parentNode;
+  tooltipOriginalNextSibling = box.nextSibling;
+  document.body.appendChild(box);
+  box.classList.add('help-box-fixed');
+
+  const bRect = btn.getBoundingClientRect();
   const boxW = 240;
   const margen = 16;
-  const bRect = btn.getBoundingClientRect();
-  const idealLeft = bRect.left + (bRect.width / 2) - (boxW / 2);
-  if (idealLeft < margen) {
-    box.style.left = `${margen - bRect.left}px`;
-    box.style.transform = 'none';
-  } else if (idealLeft + boxW > window.innerWidth - margen) {
-    const corregido = (window.innerWidth - margen - boxW) - bRect.left;
-    box.style.left = `${corregido}px`;
-    box.style.transform = 'none';
+  let left = bRect.left + (bRect.width / 2) - (boxW / 2);
+  left = Math.max(margen, Math.min(left, window.innerWidth - boxW - margen));
+  box.style.left = `${left}px`;
+  box.style.top = `${bRect.bottom + 8}px`;
+});
+
+document.addEventListener('mouseout', (e) => {
+  const wrap = e.target.closest('.help-wrap');
+  if (!wrap || wrap !== tooltipActivo) return;
+  if (wrap.contains(e.relatedTarget)) return;
+  const box = wrap.querySelector('.help-box-fixed');
+  if (box && tooltipOriginalParent) {
+    box.classList.remove('help-box-fixed');
+    box.style.left = ''; box.style.top = '';
+    tooltipOriginalParent.insertBefore(box, tooltipOriginalNextSibling);
   }
+  tooltipActivo = null;
 });
 
 
