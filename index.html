@@ -9,136 +9,218 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet">
 <style>
+/* ============================================================
+   OPERAMENTE HUB — TEMPLATE BASE
+   ============================================================
+   Este archivo es el TEMPLATE que se reutiliza para cada cliente.
+   Para instalar el Hub a un cliente nuevo:
+   1. Copiar este archivo completo
+   2. Ir a la sección "CONFIG AGENTES" en el <script> y editar
+      el array AGENTES con los agentes que ese cliente tiene
+   3. Cambiar SUPABASE_URL / SUPABASE_KEY si el cliente tiene
+      su propia instancia de Supabase
+   4. Cambiar el logo y LOGIN_PASSWORD si aplica
+   No hace falta tocar CSS ni estructura HTML para un cliente nuevo.
+   ============================================================ */
+
+/* ── 1. TOKENS DE MARCA (paleta + tema claro/oscuro) ── */
 :root {
-  --grad: linear-gradient(135deg, #6A2DE2, #F52F83);
-  --acc:  #6A2DE2;
+  --grad: linear-gradient(135deg, #7C3FED, #F52F83);
+  --acc:  #7C3FED;
   --pink: #F52F83;
-  --grn:  #00d4aa;
+  --grn:  #6EE7C9;
   --amb:  #f5be5a;
   --red:  #ee6c6c;
-  --ac2:  rgba(106,45,226,0.18);
-  --ac3:  rgba(106,45,226,0.07);
-  --gn2:  rgba(0,212,170,0.12);
 }
 [data-theme="dark"] {
-  --bg:   #0a0b14;
-  --s1:   #0f1117;
-  --s2:   #1a1d2e;
-  --s3:   #222540;
-  --b1:   rgba(255,255,255,0.07);
-  --b2:   rgba(255,255,255,0.13);
-  --b3:   rgba(255,255,255,0.20);
-  --tx:   #ffffff;
-  --sub:  #e8e6f8;
-  --mut:  #b0aed0;
+  --bg:        #06070d;
+  --glass-1:   rgba(255,255,255,0.05);
+  --glass-2:   rgba(255,255,255,0.015);
+  --glass-b:   rgba(255,255,255,0.09);
+  --glass-b2:  rgba(255,255,255,0.08);
+  --tx:        #ffffff;
+  --tx-sub:    rgba(255,255,255,0.85);
+  --tx-mut:    rgba(255,255,255,0.45);
+  --tx-faint:  rgba(255,255,255,0.35);
+  --tile-bg:   rgba(255,255,255,0.04);
+  --tile-b:    rgba(255,255,255,0.08);
+  --accent-lbl: rgba(180,140,240,0.85);
+  --glow-1:    rgba(106,45,226,0.1);
+  --glow-2:    rgba(245,47,131,0.06);
 }
 [data-theme="light"] {
-  --bg:   #eeedf6;
-  --s1:   #ffffff;
-  --s2:   #f5f4fb;
-  --s3:   #ebe9f8;
-  --b1:   rgba(0,0,0,0.07);
-  --b2:   rgba(0,0,0,0.12);
-  --b3:   rgba(0,0,0,0.18);
-  --tx:   #1a1830;
-  --sub:  #3a3860;
-  --mut:  #6a68a0;
+  --bg:        #f4f3fb;
+  --glass-1:   rgba(255,255,255,0.7);
+  --glass-2:   rgba(255,255,255,0.4);
+  --glass-b:   rgba(20,10,40,0.08);
+  --glass-b2:  rgba(20,10,40,0.07);
+  --tx:        #1a1830;
+  --tx-sub:    rgba(26,24,48,0.8);
+  --tx-mut:    rgba(26,24,48,0.5);
+  --tx-faint:  rgba(26,24,48,0.4);
+  --tile-bg:   rgba(255,255,255,0.55);
+  --tile-b:    rgba(20,10,40,0.08);
+  --accent-lbl: #6A2DE2;
+  --glow-1:    rgba(106,45,226,0.07);
+  --glow-2:    rgba(245,47,131,0.04);
 }
+
+/* ── 2. RESET Y BASE ── */
 * { margin:0; padding:0; box-sizing:border-box; }
 html { font-size:14px; }
-body { background:var(--bg); color:var(--tx); font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden; transition:background 0.3s,color 0.3s; }
-[data-theme="dark"] body::after { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E"); pointer-events:none; z-index:999; opacity:0.5; }
+body {
+  background:var(--bg); color:var(--tx); font-family:'Inter',sans-serif;
+  min-height:100vh; overflow-x:hidden; transition:background 0.3s,color 0.3s;
+}
 
-.wrap { max-width:1100px; margin:0 auto; padding:32px 24px 60px; position:relative; z-index:1; }
+/* ── 3. WRAPPER Y GLOWS DE FONDO ── */
+.wrap { max-width:1100px; margin:0 auto; padding:48px 44px 60px; position:relative; z-index:1; }
+.bg-glow-1 { position:fixed; top:-180px; left:15%; width:560px; height:560px; background:radial-gradient(circle,var(--glow-1),transparent 65%); filter:blur(10px); pointer-events:none; z-index:0; }
+.bg-glow-2 { position:fixed; bottom:-160px; right:8%; width:480px; height:480px; background:radial-gradient(circle,var(--glow-2),transparent 65%); filter:blur(10px); pointer-events:none; z-index:0; }
 
-/* HEADER */
-.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-.brand { display:flex; align-items:center; gap:12px; }
-.brand-icon { width:40px; height:40px; border-radius:10px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:600; font-size:18px; color:#fff; flex-shrink:0; }
-.brand-name { font-size:13px; color:var(--mut); letter-spacing:0.3px; }
-.brand-title { font-family:'Fraunces',serif; font-size:20px; font-weight:600; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-.header-right { display:flex; align-items:center; gap:10px; }
-.date-tag { font-size:11px; color:var(--sub); background:var(--s2); border:0.5px solid var(--b1); border-radius:20px; padding:4px 12px; white-space:nowrap; }
-.lang-btn, .theme-btn { background:var(--s2); border:0.5px solid var(--b2); border-radius:20px; color:var(--sub); cursor:pointer; padding:5px 12px; font-size:12px; font-family:'Inter',sans-serif; display:flex; align-items:center; gap:6px; transition:all 0.15s; user-select:none; }
-.lang-btn:hover, .theme-btn:hover { border-color:var(--acc); color:var(--acc); }
+/* ── 4. HEADER ── */
+.header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; flex-wrap:wrap; gap:14px; }
+.brand-sub { font-size:11px; color:var(--tx-faint); letter-spacing:2px; text-transform:uppercase; font-weight:500; margin-bottom:6px; }
+.brand-title { font-family:'Fraunces',serif; font-size:32px; font-weight:500; color:var(--tx); letter-spacing:-0.5px; }
+.header-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.pill-btn {
+  font-size:11px; color:var(--tx-mut); background:var(--tile-bg); border:0.5px solid var(--tile-b);
+  padding:6px 14px; border-radius:20px; cursor:pointer; display:flex; align-items:center; gap:4px;
+  transition:all 0.15s; user-select:none; white-space:nowrap;
+}
+.pill-btn:hover { border-color:rgba(180,140,240,0.4); color:var(--tx-sub); }
 .lang-opt { opacity:0.45; transition:opacity 0.15s,color 0.15s; }
-.lang-opt.on { opacity:1; color:var(--acc); font-weight:600; }
+.lang-opt.on { opacity:1; color:var(--tx); font-weight:600; }
 
-/* SUMMARY CARD */
-.summary-card { background:var(--s1); border:0.5px solid var(--b1); border-radius:14px; padding:18px 22px; margin-bottom:20px; }
-.summary-top { display:flex; gap:36px; align-items:center; margin-bottom:16px; }
-.summary-block { }
-.summary-label { font-size:10px; color:var(--mut); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:4px; }
-.summary-val { font-family:'Fraunces',serif; font-size:22px; font-weight:600; color:var(--tx); }
-.summary-activity { font-size:14px; color:var(--tx); flex:1; }
-.summary-divider { border-top:0.5px solid var(--b1); padding-top:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-.period-label { font-size:11px; color:var(--mut); letter-spacing:0.3px; text-transform:uppercase; }
-.period-selector { display:flex; background:var(--s2); border:0.5px solid var(--b1); border-radius:10px; padding:4px; }
-.period-opt { padding:7px 14px; font-size:12px; color:var(--mut); border-radius:7px; cursor:pointer; transition:all 0.15s; user-select:none; }
-.period-opt:hover { color:var(--sub); }
-.period-opt.active { color:#0a0b14; background:var(--grad); font-weight:600; }
-[data-theme="light"] .period-opt.active { color:#fff; }
+/* ── 5. SUMMARY CARD (agentes activos / última actividad / periodo) ── */
+.summary-card {
+  background:linear-gradient(165deg,var(--glass-1),var(--glass-2)); backdrop-filter:blur(20px);
+  border:0.5px solid var(--glass-b); border-radius:22px; padding:28px 34px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.25); margin-bottom:24px;
+}
+.summary-top { display:flex; align-items:center; gap:48px; margin-bottom:20px; flex-wrap:wrap; }
+.summary-label { font-size:10px; color:var(--accent-lbl); letter-spacing:1.2px; text-transform:uppercase; font-weight:600; margin-bottom:8px; }
+.summary-val { font-family:'Fraunces',serif; font-size:28px; font-weight:500; color:var(--tx); letter-spacing:-0.5px; }
+.summary-activity-txt { font-size:15px; color:var(--tx-sub); font-weight:300; }
+.summary-bottom { border-top:0.5px solid var(--glass-b2); padding-top:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
+.period-selector { display:flex; gap:2px; background:rgba(255,255,255,0.03); border:0.5px solid var(--glass-b2); border-radius:32px; padding:4px; }
+[data-theme="light"] .period-selector { background:rgba(20,10,40,0.03); }
+.period-opt { padding:9px 18px; font-size:12px; color:var(--tx-mut); border-radius:30px; cursor:pointer; transition:all 0.25s; font-weight:400; user-select:none; }
+.period-opt:hover { color:var(--tx-sub); }
+.period-opt.active { color:#fff; background:var(--grad); box-shadow:0 0 18px rgba(124,63,237,0.4); font-weight:500; }
 
-/* AGENT ROW */
-.agent-list { display:flex; flex-direction:column; gap:16px; }
-.agent-card { background:var(--s1); border:0.5px solid var(--b1); border-radius:14px; padding:22px 26px; position:relative; transition:border-color 0.2s; }
-.agent-card.acc-violet { border-left:3px solid #6A2DE2; }
-.agent-card.acc-magenta { border-left:3px solid #F52F83; }
-.agent-card.acc-lila { border-left:3px solid #9C7FE8; }
-.help-icon { position:absolute; top:18px; right:20px; width:18px; height:18px; border-radius:50%; border:0.5px solid var(--mut); color:var(--mut); font-size:10px; display:flex; align-items:center; justify-content:center; cursor:default; opacity:0.6; transition:opacity 0.15s; }
-.help-icon:hover { opacity:1; }
-.agent-head { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
-.agent-icon { width:30px; height:30px; border-radius:8px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#fff; flex-shrink:0; }
-.agent-name { font-size:15px; font-weight:500; color:var(--tx); }
-.agent-desc { font-size:11px; color:var(--mut); }
-.agent-status { font-size:10px; border:0.5px solid rgba(93,202,165,0.3); color:#5DCAA5; padding:3px 9px; border-radius:6px; margin-left:auto; }
-.agent-status.demo { border-color:rgba(245,190,90,0.3); color:var(--amb); }
-.agent-body { display:flex; align-items:center; gap:28px; margin-bottom:18px; flex-wrap:wrap; }
-.agent-main { min-width:90px; }
-.agent-main-label { font-size:10px; color:var(--mut); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:4px; }
-.agent-main-val { font-family:'Fraunces',serif; font-size:30px; font-weight:600; color:var(--tx); }
-.agent-secondaries { flex:1; display:flex; gap:28px; flex-wrap:wrap; }
-.agent-sec-label { font-size:10px; color:var(--mut); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:4px; }
-.agent-sec-val { font-size:17px; font-weight:500; color:var(--tx); }
-.agent-trend { width:140px; flex-shrink:0; border-left:0.5px solid var(--b1); padding-left:18px; }
-.agent-trend-label { font-size:10px; color:var(--mut); letter-spacing:0.4px; text-transform:uppercase; margin-bottom:6px; }
-.agent-trend-empty { font-size:10px; color:var(--mut); opacity:0.7; }
-.agent-foot { border-top:0.5px solid var(--b1); padding-top:14px; display:flex; justify-content:flex-end; }
-.agent-cta { background:linear-gradient(135deg,rgba(106,45,226,0.15),rgba(245,47,131,0.15)); border:0.5px solid rgba(168,143,232,0.3); border-radius:8px; padding:8px 18px; font-size:13px; color:#C9B6F2; cursor:pointer; display:flex; align-items:center; gap:6px; text-decoration:none; }
-[data-theme="light"] .agent-cta { color:#6A2DE2; }
-.agent-cta:hover { opacity:0.85; }
+/* ── 6. HELP TOOLTIP (?) — mismo patrón que Hunter, puro CSS hover ── */
+.help-wrap { position:relative; display:inline-flex; align-items:center; flex-shrink:0; }
+.help-btn {
+  width:16px; height:16px; border-radius:50%; border:0.5px solid var(--tx-mut); background:transparent;
+  color:var(--tx-mut); font-size:9px; cursor:default; display:flex; align-items:center; justify-content:center;
+  opacity:0.6; transition:opacity 0.15s; font-family:'Inter',sans-serif; line-height:1;
+}
+.help-wrap:hover .help-btn { opacity:1; }
+.help-box {
+  display:none; position:absolute; top:calc(100% + 8px); right:0; width:240px;
+  background:var(--bg); border:0.5px solid var(--glass-b); border-radius:10px; padding:13px 15px;
+  font-size:11px; color:var(--tx-sub); line-height:1.6; z-index:9999;
+  box-shadow:0 12px 32px rgba(0,0,0,0.5); pointer-events:none;
+}
+[data-theme="light"] .help-box { background:#fff; box-shadow:0 12px 32px rgba(0,0,0,0.15); }
+.help-wrap:hover .help-box { display:block; }
 
-/* LOGIN */
+/* ── 7. AGENT TILE (reposo) ── */
+.agent-row { position:relative; }
+.agent-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+.agent-tile {
+  position:relative; aspect-ratio:1/1; border-radius:22px; background:var(--tile-bg); border:0.5px solid var(--tile-b);
+  display:flex; flex-direction:column; justify-content:space-between; padding:22px;
+  cursor:pointer; transition:transform 0.3s cubic-bezier(0.16,1,0.3,1), border-color 0.3s;
+}
+.agent-tile:hover, .agent-tile.tap-active { transform:translateY(-2px); border-color:rgba(180,140,240,0.35); }
+.agent-tile-head { display:flex; align-items:flex-start; gap:10px; }
+.agent-icon { width:32px; height:32px; border-radius:9px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#fff; box-shadow:0 0 16px rgba(124,63,237,0.4); flex-shrink:0; }
+.agent-icon.pending { background:var(--tile-bg); color:var(--tx-mut); box-shadow:none; }
+.agent-tile-name { font-size:13px; color:var(--tx); font-weight:500; }
+.agent-tile-desc { font-size:10px; color:var(--tx-mut); font-weight:300; margin-top:1px; }
+.agent-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.agent-dot.activo { background:var(--grn); box-shadow:0 0 8px var(--grn); }
+.agent-dot.pendiente { background:var(--amb); }
+.agent-main-num { font-family:'Fraunces',serif; font-size:42px; font-weight:500; color:var(--tx); letter-spacing:-1px; line-height:1; margin-bottom:4px; }
+.agent-main-num.empty { color:var(--tx-faint); }
+.agent-main-lbl { font-size:10px; color:var(--tx-mut); letter-spacing:0.3px; text-transform:uppercase; }
+
+/* ── 8. PANEL DE DETALLE (revelado al hover/tap) ── */
+.agent-panel {
+  max-height:0; opacity:0; overflow:hidden;
+  transition:max-height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s, margin-bottom 0.4s;
+  margin-bottom:0;
+}
+.agent-row.open .agent-panel { max-height:340px; opacity:1; margin-bottom:16px; }
+.panel-inner {
+  background:linear-gradient(165deg,var(--glass-1),var(--glass-2)); backdrop-filter:blur(20px);
+  border:0.5px solid var(--glass-b); border-radius:20px; padding:28px 32px;
+  display:flex; flex-direction:column; gap:18px; position:relative;
+}
+.panel-top { display:flex; align-items:center; gap:36px; flex-wrap:wrap; }
+.panel-main-num { font-family:'Fraunces',serif; font-size:36px; font-weight:500; color:var(--tx); letter-spacing:-1px; line-height:1; }
+.panel-main-lbl { font-size:10px; color:var(--tx-mut); letter-spacing:0.4px; text-transform:uppercase; margin-top:5px; }
+.panel-secondaries { flex:1; display:flex; gap:30px; flex-wrap:wrap; }
+.panel-sec-lbl { font-size:9px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
+.panel-sec-val { font-size:16px; color:var(--tx-sub); font-weight:300; }
+.panel-cta { font-size:12px; color:#D9C8FB; font-weight:500; display:flex; align-items:center; gap:6px; white-space:nowrap; align-self:flex-start; margin-top:4px; text-decoration:none; }
+[data-theme="light"] .panel-cta { color:#6A2DE2; }
+.panel-trend { border-top:0.5px solid var(--glass-b2); padding-top:16px; }
+.panel-trend-head { display:flex; justify-content:space-between; margin-bottom:10px; align-items:center; }
+.panel-trend-lbl { font-size:9px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px; }
+.panel-trend-gran { font-size:9px; color:var(--tx-faint); }
+.panel-empty-msg { font-size:11px; color:var(--tx-faint); text-align:center; padding:20px 0; }
+
+/* ── 9. PENDING TILE (Vera u otros agentes sin dashboard aún) ── */
+.agent-tile.pending { opacity:0.65; cursor:default; }
+.agent-tile.pending:hover { transform:none; border-color:var(--tile-b); }
+
+/* ── 10. LOGIN GATE ── */
 .login-overlay { position:fixed; inset:0; z-index:9999; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:20px; }
 .login-overlay.hidden { display:none; }
-.login-box { background:var(--s1); border:0.5px solid var(--b2); border-radius:20px; padding:40px 36px; width:100%; max-width:380px; display:flex; flex-direction:column; align-items:center; gap:28px; box-shadow:0 24px 64px rgba(0,0,0,0.5); position:relative; overflow:hidden; }
+.login-box {
+  background:linear-gradient(165deg,var(--glass-1),var(--glass-2)); backdrop-filter:blur(20px);
+  border:0.5px solid var(--glass-b); border-radius:24px; padding:40px 36px; width:100%; max-width:380px;
+  display:flex; flex-direction:column; align-items:center; gap:26px; box-shadow:0 24px 64px rgba(0,0,0,0.4);
+  position:relative; overflow:hidden;
+}
 .login-box::before { content:""; position:absolute; top:0; left:0; right:0; height:2px; background:var(--grad); }
 .login-logo { height:32px; opacity:0.92; }
-.login-title { font-family:"Fraunces",serif; font-size:20px; font-weight:600; letter-spacing:-0.3px; color:var(--tx); text-align:center; line-height:1.3; }
-.login-sub { font-size:11px; color:var(--mut); text-align:center; margin-top:-20px; }
+.login-title { font-family:"Fraunces",serif; font-size:20px; font-weight:500; letter-spacing:-0.3px; color:var(--tx); text-align:center; line-height:1.3; }
+.login-sub { font-size:11px; color:var(--tx-mut); text-align:center; margin-top:-18px; }
 .login-field { width:100%; display:flex; flex-direction:column; gap:6px; }
-.login-field label { font-size:10px; color:var(--mut); letter-spacing:0.12em; text-transform:uppercase; }
-.login-input { width:100%; background:var(--s2); border:0.5px solid var(--b2); border-radius:10px; color:var(--tx); padding:12px 16px; font-size:14px; font-family:"Inter",sans-serif; outline:none; transition:border-color 0.15s,background 0.15s; }
-.login-input:focus { border-color:var(--acc); background:var(--ac3); }
+.login-field label { font-size:10px; color:var(--tx-mut); letter-spacing:0.12em; text-transform:uppercase; }
+.login-input { width:100%; background:var(--tile-bg); border:0.5px solid var(--tile-b); border-radius:10px; color:var(--tx); padding:12px 16px; font-size:14px; font-family:"Inter",sans-serif; outline:none; transition:border-color 0.15s; }
+.login-input:focus { border-color:var(--acc); }
 .login-input.error { border-color:var(--red); animation:loginShake 0.4s ease; }
 @keyframes loginShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
 .login-error { font-size:11px; color:var(--red); text-align:center; min-height:16px; }
-.login-btn { width:100%; background:var(--grad); border:none; border-radius:10px; color:white; font-family:"Fraunces",serif; font-size:16px; font-weight:600; padding:13px; cursor:pointer; transition:opacity 0.2s,transform 0.15s; letter-spacing:-0.2px; }
+.login-btn { width:100%; background:var(--grad); border:none; border-radius:10px; color:white; font-family:"Fraunces",serif; font-size:16px; font-weight:500; padding:13px; cursor:pointer; transition:opacity 0.2s,transform 0.15s; }
 .login-btn:hover { opacity:0.9; transform:translateY(-1px); }
-.login-footer { font-size:10px; color:var(--mut); letter-spacing:0.1em; }
+.login-footer { font-size:10px; color:var(--tx-faint); letter-spacing:0.1em; }
 
+/* ── 11. RESPONSIVE / MOBILE ──
+   En mobile no hay hover real, por eso .agent-row.open se activa con
+   tap (vía JS) en vez de :hover. Layout pasa a columna única. */
 @media(max-width:768px){
-  .wrap { padding:20px 16px 40px; }
-  .header { flex-wrap:wrap; gap:10px; }
-  .summary-top { flex-direction:column; align-items:flex-start; gap:14px; }
-  .agent-body { flex-direction:column; align-items:flex-start; gap:16px; }
-  .agent-trend { border-left:none; padding-left:0; width:100%; }
-  .agent-secondaries { gap:20px; }
+  .wrap { padding:28px 18px 40px; }
+  .header { flex-direction:column; align-items:flex-start; }
+  .summary-top { flex-direction:column; align-items:flex-start; gap:16px; }
+  .agent-grid { grid-template-columns:1fr; }
+  .agent-tile { aspect-ratio:auto; min-height:140px; }
+  .panel-top { flex-direction:column; align-items:flex-start; gap:16px; }
+  .panel-secondaries { gap:22px; }
+  .panel-cta { align-self:flex-end; margin-top:-30px; }
 }
 </style>
 </head>
 <body>
 
+<!-- ============================================================
+     LOGIN GATE
+     ============================================================ -->
 <div class="login-overlay" id="login-gate">
   <div class="login-box">
     <img id="login-logo" src="https://operamente-github.jdray1.easypanel.host/logo/Operamente.png" alt="Operamente" class="login-logo">
@@ -154,36 +236,43 @@ body { background:var(--bg); color:var(--tx); font-family:'Inter',sans-serif; mi
   </div>
 </div>
 
-<div class="wrap" id="app" style="display:none;">
+<!-- ============================================================
+     APP — visible solo después del login
+     ============================================================ -->
+<div id="app" style="display:none;">
 
+<div class="bg-glow-1"></div>
+<div class="bg-glow-2"></div>
+
+<div class="wrap">
+
+  <!-- ── HEADER ── -->
   <div class="header">
-    <div class="brand">
-      <div class="brand-icon">OM</div>
-      <div>
-        <div class="brand-name">operamente</div>
-        <div class="brand-title">Hub</div>
-      </div>
+    <div>
+      <div class="brand-sub">operamente</div>
+      <div class="brand-title">Hub</div>
     </div>
     <div class="header-right">
-      <div class="date-tag" id="topbar-date"></div>
-      <button class="lang-btn" onclick="toggleLang()"><span class="lang-opt" id="lang-es">ES</span><span style="opacity:0.3">|</span><span class="lang-opt" id="lang-en">EN</span></button>
-      <button class="theme-btn" onclick="toggleTheme()"><span id="theme-icon">☀</span><span id="theme-label">Claro</span></button>
+      <div class="pill-btn" id="topbar-date"></div>
+      <div class="pill-btn" onclick="toggleLang()"><span class="lang-opt" id="lang-es">ES</span><span style="opacity:0.3">|</span><span class="lang-opt" id="lang-en">EN</span></div>
+      <div class="pill-btn" onclick="toggleTheme()"><span id="theme-icon">☀</span><span id="theme-label">Claro</span></div>
     </div>
   </div>
 
+  <!-- ── SUMMARY CARD ── -->
   <div class="summary-card">
     <div class="summary-top">
-      <div class="summary-block">
+      <div>
         <div class="summary-label" id="t-agentes-activos">Agentes activos</div>
-        <div class="summary-val" id="sum-agentes">3 / 3</div>
+        <div class="summary-val" id="sum-agentes">— / —</div>
       </div>
-      <div class="summary-activity">
+      <div style="flex:1">
         <div class="summary-label" id="t-ultima-actividad">Última actividad</div>
-        <div id="sum-actividad" style="margin-top:4px;">—</div>
+        <div class="summary-activity-txt" id="sum-actividad">—</div>
       </div>
     </div>
-    <div class="summary-divider">
-      <div class="period-label" id="t-periodo-hub">Periodo del hub</div>
+    <div class="summary-bottom">
+      <div class="summary-label" id="t-periodo-hub" style="margin-bottom:0;">Periodo del hub</div>
       <div class="period-selector" id="period-selector">
         <div class="period-opt" data-range="today" id="t-period-today">Hoy</div>
         <div class="period-opt active" data-range="week" id="t-period-week">Semana</div>
@@ -194,200 +283,167 @@ body { background:var(--bg); color:var(--tx); font-family:'Inter',sans-serif; mi
     </div>
   </div>
 
-  <div class="agent-list">
+  <!-- ============================================================
+       AGENT TILES — generados dinámicamente por JS desde el array
+       AGENTES (ver sección "CONFIG AGENTES" en el <script> abajo).
+       Este <div> queda vacío en el HTML; renderAgentTiles() lo llena.
+       ============================================================ -->
+  <div id="agents-container"></div>
 
-    <div class="agent-card acc-violet">
-      <div class="help-icon" title="Métricas de Concierge">?</div>
-      <div class="agent-head">
-        <div class="agent-icon">OM</div>
-        <div>
-          <div class="agent-name">Concierge</div>
-          <div class="agent-desc" id="t-desc-concierge">agenda citas por WhatsApp</div>
-        </div>
-        <div class="agent-status" id="status-concierge">● <span id="t-activo-1">Activo</span></div>
-      </div>
-      <div class="agent-body">
-        <div class="agent-main">
-          <div class="agent-main-label" id="t-leads-label-1">Leads</div>
-          <div class="agent-main-val" id="concierge-leads">—</div>
-        </div>
-        <div class="agent-secondaries">
-          <div>
-            <div class="agent-sec-label" id="t-citas-confirmadas">Citas confirmadas</div>
-            <div class="agent-sec-val" id="concierge-citas">—</div>
-          </div>
-          <div>
-            <div class="agent-sec-label" id="t-booking-rate">Booking rate</div>
-            <div class="agent-sec-val" id="concierge-rate">—</div>
-          </div>
-          <div>
-            <div class="agent-sec-label" id="t-pipeline">Pipeline</div>
-            <div class="agent-sec-val" id="concierge-pipeline">—</div>
-          </div>
-        </div>
-        <div class="agent-trend">
-          <div class="agent-trend-label" id="t-tendencia-1">Tendencia</div>
-          <div class="agent-trend-empty" id="t-sin-datos-1">sin datos aún</div>
-        </div>
-      </div>
-      <div class="agent-foot">
-        <a class="agent-cta" href="https://concierge.operamente.com" target="_blank"><span id="t-ver-analisis-1">Ver análisis completo</span> →</a>
-      </div>
-    </div>
-
-    <div class="agent-card acc-magenta">
-      <div class="help-icon" title="Métricas de Hunter">?</div>
-      <div class="agent-head">
-        <div class="agent-icon">OM</div>
-        <div>
-          <div class="agent-name">Hunter</div>
-          <div class="agent-desc" id="t-desc-hunter">prospección y scoring de leads</div>
-        </div>
-        <div class="agent-status" id="status-hunter">● <span id="t-activo-2">Activo</span></div>
-      </div>
-      <div class="agent-body">
-        <div class="agent-main">
-          <div class="agent-main-label" id="t-leads-label-2">Leads</div>
-          <div class="agent-main-val" id="hunter-leads">—</div>
-        </div>
-        <div class="agent-secondaries">
-          <div>
-            <div class="agent-sec-label" id="t-prioritarios">Prioritarios</div>
-            <div class="agent-sec-val" id="hunter-pri">—</div>
-          </div>
-          <div>
-            <div class="agent-sec-label" id="t-buenos">Buenos</div>
-            <div class="agent-sec-val" id="hunter-good">—</div>
-          </div>
-          <div>
-            <div class="agent-sec-label" id="t-contactados">Contactados</div>
-            <div class="agent-sec-val" id="hunter-contactados">—</div>
-          </div>
-        </div>
-        <div class="agent-trend">
-          <div class="agent-trend-label" id="t-tendencia-2">Tendencia</div>
-          <div class="agent-trend-empty" id="t-sin-datos-2">sin datos aún</div>
-        </div>
-      </div>
-      <div class="agent-foot">
-        <a class="agent-cta" href="https://ls.operamente.com" target="_blank"><span id="t-ver-pipeline">Ver pipeline completo</span> →</a>
-      </div>
-    </div>
-
-    <div class="agent-card acc-lila">
-      <div class="help-icon" title="Métricas de Vera">?</div>
-      <div class="agent-head">
-        <div class="agent-icon">OM</div>
-        <div>
-          <div class="agent-name">Vera</div>
-          <div class="agent-desc" id="t-desc-vera">agente de voz inmobiliario</div>
-        </div>
-        <div class="agent-status demo" id="status-vera">● <span id="t-pendiente">Pendiente</span></div>
-      </div>
-      <div class="agent-body">
-        <div class="agent-main">
-          <div class="agent-main-label" id="t-llamadas-label">Llamadas</div>
-          <div class="agent-main-val">—</div>
-        </div>
-        <div class="agent-secondaries">
-          <div>
-            <div class="agent-sec-label" id="t-calificacion">Calificación</div>
-            <div class="agent-sec-val">—</div>
-          </div>
-          <div>
-            <div class="agent-sec-label" id="t-entregados">Entregados</div>
-            <div class="agent-sec-val">—</div>
-          </div>
-          <div>
-            <div class="agent-sec-label" id="t-duracion-prom">Duración prom.</div>
-            <div class="agent-sec-val">—</div>
-          </div>
-        </div>
-        <div class="agent-trend">
-          <div class="agent-trend-label" id="t-tendencia-3">Tendencia</div>
-          <div class="agent-trend-empty" id="t-en-construccion">dashboard en construcción</div>
-        </div>
-      </div>
-      <div class="agent-foot">
-        <span class="agent-cta" style="opacity:0.5;cursor:default;" id="t-proximamente">Próximamente →</span>
-      </div>
-    </div>
-
-  </div>
+</div>
 </div>
 
 <script>
+/* ============================================================
+   SECCIÓN A — CONFIGURACIÓN DEL CLIENTE
+   ============================================================
+   ESTA ES LA ÚNICA SECCIÓN QUE SE EDITA AL INSTALAR EL HUB
+   PARA UN CLIENTE NUEVO. Todo lo demás en este archivo es
+   lógica genérica que no depende de qué agentes tenga el cliente.
+
+   Para agregar/quitar un agente: edita el array AGENTES abajo.
+   Cada agente necesita:
+     id          — identificador único, usado internamente (sin espacios)
+     nombre      — nombre visible en el tile
+     descripcion — subtítulo corto bajo el nombre
+     color       — 'violeta' | 'magenta' | 'neutro' (acento visual del ícono)
+     estado      — 'activo' | 'pendiente' (pendiente = tile atenuado, sin datos)
+     urlCompleto — link al dashboard completo de ese agente
+     fuente      — 'webhook' | 'supabase' | 'ninguna' (de dónde lee sus datos)
+     webhookUrl  — (solo si fuente='webhook') URL del endpoint de resumen en n8n
+     metricaLbl  — etiqueta del número principal, ej. 'leads', 'llamadas'
+     secundarias — array de {clave, label} que se muestran en el panel detalle
+   ============================================================ */
+
+const AGENTES = [
+  {
+    id: 'concierge',
+    nombre: 'Concierge',
+    descripcion: { es: 'agenda citas por WhatsApp', en: 'books appointments via WhatsApp' },
+    color: 'violeta',
+    estado: 'activo',
+    urlCompleto: 'https://concierge.operamente.com',
+    fuente: 'webhook',
+    webhookUrl: 'https://operamente-n8n.jdray1.easypanel.host/webhook/hub-resumen-concierge',
+    metricaLbl: { es: 'leads', en: 'leads' },
+    secundarias: [
+      { clave: 'citas_confirmadas', label: { es: 'Citas confirmadas', en: 'Confirmed appointments' }, formato: 'numero' },
+      { clave: 'booking_rate',      label: { es: 'Booking rate', en: 'Booking rate' },               formato: 'porcentaje' },
+      { clave: 'pipeline_eur',      label: { es: 'Pipeline', en: 'Pipeline' },                        formato: 'eur' },
+    ],
+  },
+  {
+    id: 'hunter',
+    nombre: 'Hunter',
+    descripcion: { es: 'scoring de leads', en: 'lead scoring' },
+    color: 'magenta',
+    estado: 'activo',
+    urlCompleto: 'https://ls.operamente.com',
+    fuente: 'supabase',
+    metricaLbl: { es: 'leads', en: 'leads' },
+    secundarias: [
+      { clave: 'prioritarios', label: { es: 'Prioritarios', en: 'Priority' },   formato: 'numero' },
+      { clave: 'buenos',       label: { es: 'Buenos', en: 'Good fit' },        formato: 'numero' },
+      { clave: 'contactados',  label: { es: 'Contactados', en: 'Contacted' },  formato: 'numero' },
+    ],
+  },
+  {
+    id: 'vera',
+    nombre: 'Vera',
+    descripcion: { es: 'agente de voz inmobiliario', en: 'real estate voice agent' },
+    color: 'neutro',
+    estado: 'pendiente',
+    urlCompleto: null,
+    fuente: 'ninguna',
+    metricaLbl: { es: 'llamadas', en: 'calls' },
+    secundarias: [],
+  },
+  /* ── Para agregar un cuarto agente, copia un bloque {...} de arriba
+        y ajusta sus valores. No hay que tocar nada más en el archivo. ── */
+];
+
 const SUPABASE_URL = 'https://qlttzanvtjnougnkhuuk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsdHR6YW52dGpub3VnbmtodXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjk3NjIsImV4cCI6MjA5MDY0NTc2Mn0.eVkLGYANWJoGFq3VWhFMocM6SeYZ41CrVQ_FYXMPleA';
-const CONCIERGE_WEBHOOK = 'https://operamente-n8n.jdray1.easypanel.host/webhook/hub-resumen-concierge';
+const LOGIN_PASSWORD = 'Operamente2026';
 
+/* ============================================================
+   SECCIÓN B — TRADUCCIONES (interfaz genérica, no depende de
+   qué agentes tenga el cliente — esa parte vive en AGENTES arriba)
+   ============================================================ */
 const T = {
   es: {
     login_title: 'Hub Operamente', login_sub: 'Acceso restringido · Operamente',
     login_label: 'Contraseña', login_btn: 'Ingresar', login_error: 'Contraseña incorrecta',
     agentes_activos: 'Agentes activos', ultima_actividad: 'Última actividad',
+    actividad_sin_datos: 'Sin actividad reciente registrada',
     periodo_hub: 'Periodo del hub',
     period_today: 'Hoy', period_week: 'Semana', period_month: 'Mes', period_quarter: 'Q', period_year: 'Año',
-    desc_concierge: 'agenda citas por WhatsApp', desc_hunter: 'prospección y scoring de leads', desc_vera: 'agente de voz inmobiliario',
     activo: 'Activo', pendiente: 'Pendiente',
-    leads_label: 'Leads', citas_confirmadas: 'Citas confirmadas', booking_rate: 'Booking rate', pipeline: 'Pipeline',
-    prioritarios: 'Prioritarios', buenos: 'Buenos', contactados: 'Contactados',
-    llamadas_label: 'Llamadas', calificacion: 'Calificación', entregados: 'Entregados', duracion_prom: 'Duración prom.',
-    tendencia: 'Tendencia', sin_datos: 'sin datos aún', en_construccion: 'dashboard en construcción',
-    ver_analisis: 'Ver análisis completo', ver_pipeline: 'Ver pipeline completo', proximamente: 'Próximamente',
-    actividad_sin_datos: 'Sin actividad reciente registrada',
+    ver_completo: 'Ver análisis completo', en_construccion: 'Dashboard en construcción',
+    tendencia: 'Tendencia', sin_datos_tendencia: 'Aún sin suficientes datos para mostrar tendencia',
+    help_metrica_principal: 'Total de registros nuevos del agente en el periodo seleccionado arriba.',
+    help_tendencia: 'Evolución del valor principal a lo largo del periodo seleccionado. Cada punto representa una porción de tiempo: por hora si ves "Hoy", por día en "Semana" o "Mes", por semana en "Q", por mes en "Año".',
+    gran_today: '1 punto = 1 hora', gran_week: '1 punto = 1 día', gran_month: '1 punto = 1 día',
+    gran_quarter: '1 punto = 1 semana', gran_year: '1 punto = 1 mes',
+    leads_label: 'leads', llamadas_label: 'llamadas',
   },
   en: {
     login_title: 'Operamente Hub', login_sub: 'Restricted access · Operamente',
     login_label: 'Password', login_btn: 'Sign in', login_error: 'Incorrect password',
     agentes_activos: 'Active agents', ultima_actividad: 'Last activity',
+    actividad_sin_datos: 'No recent activity recorded',
     periodo_hub: 'Hub period',
     period_today: 'Today', period_week: 'Week', period_month: 'Month', period_quarter: 'Q', period_year: 'Year',
-    desc_concierge: 'books appointments via WhatsApp', desc_hunter: 'prospecting and lead scoring', desc_vera: 'real estate voice agent',
     activo: 'Active', pendiente: 'Pending',
-    leads_label: 'Leads', citas_confirmadas: 'Confirmed appointments', booking_rate: 'Booking rate', pipeline: 'Pipeline',
-    prioritarios: 'Priority', buenos: 'Good fit', contactados: 'Contacted',
-    llamadas_label: 'Calls', calificacion: 'Qualification', entregados: 'Delivered', duracion_prom: 'Avg. duration',
-    tendencia: 'Trend', sin_datos: 'no data yet', en_construccion: 'dashboard under construction',
-    ver_analisis: 'View full analytics', ver_pipeline: 'View full pipeline', proximamente: 'Coming soon',
-    actividad_sin_datos: 'No recent activity recorded',
+    ver_completo: 'View full analytics', en_construccion: 'Dashboard under construction',
+    tendencia: 'Trend', sin_datos_tendencia: 'Not enough data yet to show a trend',
+    help_metrica_principal: 'Total new records for this agent in the period selected above.',
+    help_tendencia: 'Evolution of the main value across the selected period. Each point represents a slice of time: hourly for "Today", daily for "Week" or "Month", weekly for "Q", monthly for "Year".',
+    gran_today: '1 point = 1 hour', gran_week: '1 point = 1 day', gran_month: '1 point = 1 day',
+    gran_quarter: '1 point = 1 week', gran_year: '1 point = 1 month',
+    leads_label: 'leads', llamadas_label: 'calls',
   }
 };
 let currentLang = 'es';
 let currentRange = 'week';
 function t(key) { return T[currentLang]?.[key] ?? key; }
+function L(obj) { return obj?.[currentLang] ?? obj?.es ?? ''; }
 
-const LOGIN_PASSWORD = "Operamente2026";
+/* ============================================================
+   SECCIÓN C — LOGIN, TEMA E IDIOMA (genérico, no cambia entre clientes)
+   ============================================================ */
 function loginSubmit() {
-  const val = document.getElementById("login-input").value;
-  const inp = document.getElementById("login-input");
-  const err = document.getElementById("login-error");
+  const val = document.getElementById('login-input').value;
+  const inp = document.getElementById('login-input');
+  const err = document.getElementById('login-error');
   if (val === LOGIN_PASSWORD) {
-    sessionStorage.setItem("om_auth","1");
-    document.getElementById("login-gate").classList.add("hidden");
-    document.getElementById("app").style.display = "block";
+    sessionStorage.setItem('om_auth', '1');
+    document.getElementById('login-gate').classList.add('hidden');
+    document.getElementById('app').style.display = 'block';
     initApp();
   } else {
-    inp.classList.remove("error"); void inp.offsetWidth; inp.classList.add("error");
-    err.textContent = t('login_error'); inp.value="";
-    setTimeout(()=>inp.classList.remove("error"),500);
+    inp.classList.remove('error'); void inp.offsetWidth; inp.classList.add('error');
+    err.textContent = t('login_error'); inp.value = '';
+    setTimeout(() => inp.classList.remove('error'), 500);
   }
 }
+
 function checkAuth() {
   currentLang = localStorage.getItem('om_lang') || 'es';
   const theme = localStorage.getItem('om_theme') || 'dark';
   document.documentElement.setAttribute('data-theme', theme);
-  if (sessionStorage.getItem("om_auth")==="1") {
-    document.getElementById("login-gate").classList.add("hidden");
-    document.getElementById("app").style.display = "block";
+  if (sessionStorage.getItem('om_auth') === '1') {
+    document.getElementById('login-gate').classList.add('hidden');
+    document.getElementById('app').style.display = 'block';
     initApp();
   } else {
     document.getElementById('lang-es')?.classList.toggle('on', currentLang === 'es');
     document.getElementById('lang-en')?.classList.toggle('on', currentLang === 'en');
     applyLoginLang();
-    document.getElementById("login-input").focus();
+    document.getElementById('login-input').focus();
   }
 }
+
 function applyLoginLang() {
   document.getElementById('t-login-title').textContent = t('login_title');
   document.getElementById('t-login-sub').textContent = t('login_sub');
@@ -400,9 +456,9 @@ function setTheme(th) {
   localStorage.setItem('om_theme', th);
   const d = th === 'dark';
   document.getElementById('theme-icon').textContent = d ? '☀' : '☾';
-  document.getElementById('theme-label').textContent = d ? (currentLang==='en'?'Light':'Claro') : (currentLang==='en'?'Dark':'Oscuro');
+  document.getElementById('theme-label').textContent = d ? (currentLang === 'en' ? 'Light' : 'Claro') : (currentLang === 'en' ? 'Dark' : 'Oscuro');
 }
-function toggleTheme(){ setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); }
+function toggleTheme() { setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
 
 function setLang(l) {
   currentLang = l;
@@ -411,68 +467,251 @@ function setLang(l) {
   document.getElementById('lang-en')?.classList.toggle('on', l === 'en');
   applyLang();
 }
-function toggleLang(){ setLang((localStorage.getItem('om_lang')||'es')==='es'?'en':'es'); }
-
-function applyLang() {
-  const map = {
-    't-agentes-activos':'agentes_activos','t-ultima-actividad':'ultima_actividad','t-periodo-hub':'periodo_hub',
-    't-period-today':'period_today','t-period-week':'period_week','t-period-month':'period_month',
-    't-period-quarter':'period_quarter','t-period-year':'period_year',
-    't-desc-concierge':'desc_concierge','t-desc-hunter':'desc_hunter','t-desc-vera':'desc_vera',
-    't-activo-1':'activo','t-activo-2':'activo','t-pendiente':'pendiente',
-    't-leads-label-1':'leads_label','t-leads-label-2':'leads_label','t-llamadas-label':'llamadas_label',
-    't-citas-confirmadas':'citas_confirmadas','t-booking-rate':'booking_rate','t-pipeline':'pipeline',
-    't-prioritarios':'prioritarios','t-buenos':'buenos','t-contactados':'contactados',
-    't-calificacion':'calificacion','t-entregados':'entregados','t-duracion-prom':'duracion_prom',
-    't-tendencia-1':'tendencia','t-tendencia-2':'tendencia','t-tendencia-3':'tendencia',
-    't-sin-datos-1':'sin_datos','t-sin-datos-2':'sin_datos','t-en-construccion':'en_construccion',
-    't-ver-analisis-1':'ver_analisis','t-ver-pipeline':'ver_pipeline','t-proximamente':'proximamente',
-  };
-  Object.entries(map).forEach(([id,key])=>{ const el=document.getElementById(id); if(el) el.textContent=t(key); });
-  setTheme(document.documentElement.getAttribute('data-theme'));
-  updateDateLocale();
-  const actEl = document.getElementById('sum-actividad');
-  if (actEl && (actEl.textContent === '—' || actEl.textContent === T.es.actividad_sin_datos || actEl.textContent === T.en.actividad_sin_datos)) {
-    actEl.textContent = t('actividad_sin_datos');
-  }
-}
+function toggleLang() { setLang((localStorage.getItem('om_lang') || 'es') === 'es' ? 'en' : 'es'); }
 
 function updateDateLocale() {
   const now = new Date();
   const locale = currentLang === 'en' ? 'en-US' : 'es-ES';
-  document.getElementById('topbar-date').textContent = now.toLocaleDateString(locale,{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('topbar-date').textContent = now.toLocaleDateString(locale, { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
 }
 
-function initApp() {
-  setLang(currentLang);
-  document.getElementById('period-selector').addEventListener('click', (e)=>{
-    const opt = e.target.closest('.period-opt');
-    if (!opt) return;
-    document.querySelectorAll('.period-opt').forEach(o=>o.classList.remove('active'));
-    opt.classList.add('active');
-    currentRange = opt.dataset.range;
-    loadConcierge(); loadHunter();
-  });
-  loadConcierge();
-  loadHunter();
-}
-checkAuth();
+/* ============================================================
+   SECCIÓN D — RENDER DE TILES (genérico — lee el array AGENTES
+   y genera el HTML de cada tile + su panel de detalle. Esto es
+   lo que hace que agregar un agente nuevo no requiera tocar HTML:
+   basta con agregar la entrada en AGENTES, y este código genera
+   su tile automáticamente.)
+   ============================================================ */
 
-// CONCIERGE — via webhook n8n
-async function loadConcierge() {
-  try {
-    const res = await fetch(`${CONCIERGE_WEBHOOK}?range=${currentRange}`);
-    const d = await res.json();
-    document.getElementById('concierge-leads').textContent = d.leads ?? '—';
-    document.getElementById('concierge-citas').textContent = d.citas_confirmadas ?? '—';
-    document.getElementById('concierge-rate').textContent = (d.booking_rate != null) ? d.booking_rate + '%' : '—';
-    document.getElementById('concierge-pipeline').textContent = (d.pipeline_eur != null) ? Number(d.pipeline_eur).toLocaleString(currentLang==='en'?'en-US':'es-ES') + ' EUR' : '—';
-  } catch(e) {
-    console.error('Error cargando Concierge', e);
+const COLOR_MAP = {
+  violeta: { tileBg:'linear-gradient(165deg,rgba(124,63,237,0.13),rgba(255,255,255,0.02))', tileB:'rgba(180,140,240,0.18)', iconGlow:'rgba(124,63,237,0.4)', panelBg:'linear-gradient(165deg,rgba(124,63,237,0.1),rgba(255,255,255,0.025))', panelB:'rgba(180,140,240,0.2)', cta:'#D9C8FB' },
+  magenta: { tileBg:'linear-gradient(165deg,rgba(245,47,131,0.09),rgba(255,255,255,0.02))', tileB:'rgba(240,140,180,0.18)', iconGlow:'rgba(245,47,131,0.35)', panelBg:'linear-gradient(165deg,rgba(245,47,131,0.08),rgba(255,255,255,0.02))', panelB:'rgba(240,140,180,0.2)', cta:'#F5C2DC' },
+  neutro:  { tileBg:'rgba(255,255,255,0.04)', tileB:'rgba(255,255,255,0.08)', iconGlow:'none', panelBg:'rgba(255,255,255,0.04)', panelB:'rgba(255,255,255,0.1)', cta:'rgba(255,255,255,0.6)' },
+};
+
+function renderAgentTiles() {
+  const container = document.getElementById('agents-container');
+  container.innerHTML = AGENTES.map(agente => {
+    const c = COLOR_MAP[agente.color] || COLOR_MAP.neutro;
+    const esPendiente = agente.estado === 'pendiente';
+    const dotClass = esPendiente ? 'pendiente' : 'activo';
+    const dotLabel = esPendiente ? t('pendiente') : t('activo');
+
+    return `
+    <div class="agent-row" id="row-${agente.id}" data-agente="${agente.id}">
+
+      <div class="agent-panel" id="panel-${agente.id}">
+        <div class="panel-inner" style="background:${c.panelBg};border-color:${c.panelB}">
+          ${esPendiente ? `
+            <div class="panel-empty-msg">${L(agente.descripcion)} · ${t('en_construccion')}</div>
+          ` : `
+            <div class="panel-top">
+              <div>
+                <div class="panel-main-num" id="panel-main-${agente.id}">—</div>
+                <div class="panel-main-lbl">${L(agente.metricaLbl)} · <span id="panel-rangelbl-${agente.id}"></span></div>
+              </div>
+              <div class="panel-secondaries">
+                ${agente.secundarias.map(s => `
+                  <div>
+                    <div class="panel-sec-lbl">${L(s.label)}</div>
+                    <div class="panel-sec-val" id="panel-${s.clave}-${agente.id}">—</div>
+                  </div>
+                `).join('')}
+              </div>
+              ${agente.urlCompleto ? `<a class="panel-cta" href="${agente.urlCompleto}" target="_blank" style="color:${c.cta}">${t('ver_completo')}<span>→</span></a>` : ''}
+            </div>
+            <div class="panel-trend">
+              <div class="panel-trend-head">
+                <div class="panel-trend-lbl">
+                  ${t('tendencia')}
+                  <div class="help-wrap">
+                    <button class="help-btn">?</button>
+                    <div class="help-box">${t('help_tendencia')}</div>
+                  </div>
+                </div>
+                <div class="panel-trend-gran" id="panel-gran-${agente.id}"></div>
+              </div>
+              <div id="panel-chart-${agente.id}"></div>
+            </div>
+          `}
+        </div>
+      </div>
+
+      <div class="agent-tile ${esPendiente ? 'pending' : ''}" onclick="onTileTap('${agente.id}')">
+        <div class="agent-tile-head">
+          <div class="agent-icon ${esPendiente ? 'pending' : ''}" style="${esPendiente ? '' : `box-shadow:0 0 16px ${c.iconGlow}`}">OM</div>
+          <div style="flex:1">
+            <div class="agent-tile-name">${agente.nombre}</div>
+            <div class="agent-tile-desc">${L(agente.descripcion)}</div>
+          </div>
+          <span class="agent-dot ${dotClass}" title="${dotLabel}"></span>
+        </div>
+        <div>
+          <div class="agent-main-num ${esPendiente ? 'empty' : ''}" id="tile-main-${agente.id}">—</div>
+          <div class="agent-main-lbl" style="display:flex;align-items:center;gap:5px">
+            ${esPendiente ? t('en_construccion') : L(agente.metricaLbl)}
+            ${esPendiente ? '' : `
+              <div class="help-wrap">
+                <button class="help-btn">?</button>
+                <div class="help-box">${t('help_metrica_principal')}</div>
+              </div>
+            `}
+          </div>
+        </div>
+      </div>
+
+    </div>`;
+  }).join('');
+}
+
+/* Tap para mobile (y también funciona en desktop como respaldo del hover) */
+let openRowId = null;
+function onTileTap(agenteId) {
+  const isTouch = window.matchMedia('(hover: none)').matches;
+  if (!isTouch) return; /* en desktop el hover de CSS ya hace el trabajo */
+  const row = document.getElementById('row-' + agenteId);
+  if (openRowId === agenteId) {
+    row.classList.remove('open');
+    openRowId = null;
+  } else {
+    if (openRowId) document.getElementById('row-' + openRowId)?.classList.remove('open');
+    row.classList.add('open');
+    openRowId = agenteId;
   }
 }
 
-// HUNTER — lectura directa a Supabase (RLS solo lectura, anon key)
+/* En desktop usamos hover real vía CSS, agregando .open por JS para consistencia */
+function attachHoverHandlers() {
+  AGENTES.forEach(agente => {
+    const row = document.getElementById('row-' + agente.id);
+    if (!row) return;
+    row.addEventListener('mouseenter', () => { if (!window.matchMedia('(hover: none)').matches) row.classList.add('open'); });
+    row.addEventListener('mouseleave', () => { if (!window.matchMedia('(hover: none)').matches) row.classList.remove('open'); });
+  });
+}
+
+/* ============================================================
+   SECCIÓN E — APLICAR IDIOMA A TODO LO ESTÁTICO + RE-RENDER
+   ============================================================ */
+function applyLang() {
+  document.getElementById('t-agentes-activos').textContent = t('agentes_activos');
+  document.getElementById('t-ultima-actividad').textContent = t('ultima_actividad');
+  document.getElementById('t-periodo-hub').textContent = t('periodo_hub');
+  document.getElementById('t-period-today').textContent = t('period_today');
+  document.getElementById('t-period-week').textContent = t('period_week');
+  document.getElementById('t-period-month').textContent = t('period_month');
+  document.getElementById('t-period-quarter').textContent = t('period_quarter');
+  document.getElementById('t-period-year').textContent = t('period_year');
+  setTheme(document.documentElement.getAttribute('data-theme'));
+  updateDateLocale();
+
+  const actEl = document.getElementById('sum-actividad');
+  if (!actEl.dataset.real) actEl.textContent = t('actividad_sin_datos');
+
+  renderAgentTiles();
+  attachHoverHandlers();
+  loadAllAgentData();
+}
+
+/* ============================================================
+   SECCIÓN F — GRANULARIDAD POR RANGO (genérico)
+   Define cuántos puntos de tendencia mostrar y qué representa
+   cada uno, según el periodo seleccionado arriba en el Hub.
+   ============================================================ */
+const GRANULARIDAD = {
+  today:   { puntos: 24, unidad: 'hour',  labelKey: 'gran_today' },
+  week:    { puntos: 7,  unidad: 'day',   labelKey: 'gran_week' },
+  month:   { puntos: 30, unidad: 'day',   labelKey: 'gran_month' },
+  quarter: { puntos: 13, unidad: 'week',  labelKey: 'gran_quarter' },
+  year:    { puntos: 12, unidad: 'month', labelKey: 'gran_year' },
+};
+
+function formatVal(valor, formato) {
+  if (valor === null || valor === undefined) return '—';
+  if (formato === 'porcentaje') return valor + '%';
+  if (formato === 'eur') return Number(valor).toLocaleString(currentLang === 'en' ? 'en-US' : 'es-ES') + ' EUR';
+  return valor;
+}
+
+/* ============================================================
+   SECCIÓN G — MINI GRÁFICA DE TENDENCIA (SVG generado por JS,
+   genérico para cualquier agente — recibe un array de números)
+   ============================================================ */
+function renderTrendSVG(containerId, valores) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!valores || valores.length < 2 || valores.every(v => v === 0)) {
+    el.innerHTML = `<div class="panel-empty-msg" style="padding:10px 0">${t('sin_datos_tendencia')}</div>`;
+    return;
+  }
+  const w = 560, h = 60, max = Math.max(...valores), min = Math.min(...valores);
+  const range = (max - min) || 1;
+  const step = w / (valores.length - 1);
+  const points = valores.map((v, i) => {
+    const x = Math.round(i * step);
+    const y = Math.round(h - 6 - ((v - min) / range) * (h - 12));
+    return `${x},${y}`;
+  }).join(' ');
+  const lastX = w, lastY = Math.round(h - 6 - ((valores[valores.length-1] - min) / range) * (h - 12));
+  el.innerHTML = `
+    <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <polyline points="${points}" fill="none" stroke="#B98FF0" stroke-width="2"/>
+      <circle cx="${lastX}" cy="${lastY}" r="4" fill="#F52F83"/>
+    </svg>`;
+}
+
+/* ============================================================
+   SECCIÓN H — CARGA DE DATOS POR AGENTE (genérico, despacha
+   según agente.fuente. Para agregar una fuente nueva — por
+   ejemplo cuando Vera tenga su webhook — solo se agrega un
+   caso nuevo en este switch, sin tocar el resto del archivo)
+   ============================================================ */
+async function loadAgentData(agente) {
+  if (agente.estado === 'pendiente') return;
+  try {
+    let datos;
+    if (agente.fuente === 'webhook') {
+      datos = await fetchWebhookResumen(agente);
+    } else if (agente.fuente === 'supabase') {
+      datos = await fetchSupabaseResumen(agente);
+    } else {
+      return;
+    }
+    pintarAgente(agente, datos);
+  } catch (e) {
+    console.error(`Error cargando ${agente.id}:`, e);
+  }
+}
+
+function pintarAgente(agente, datos) {
+  const main = datos.principal ?? 0;
+  document.getElementById(`tile-main-${agente.id}`).textContent = main;
+  document.getElementById(`panel-main-${agente.id}`).textContent = main;
+  document.getElementById(`panel-rangelbl-${agente.id}`).textContent = t('period_' + currentRange).toLowerCase();
+  document.getElementById(`panel-gran-${agente.id}`).textContent = t(GRANULARIDAD[currentRange].labelKey);
+
+  agente.secundarias.forEach(s => {
+    const el = document.getElementById(`panel-${s.clave}-${agente.id}`);
+    if (el) el.textContent = formatVal(datos[s.clave], s.formato);
+  });
+
+  renderTrendSVG(`panel-chart-${agente.id}`, datos.serie || []);
+}
+
+/* ── Fuente: webhook n8n (Concierge y futuros agentes con backend propio) ── */
+async function fetchWebhookResumen(agente) {
+  const res = await fetch(`${agente.webhookUrl}?range=${currentRange}`);
+  const d = await res.json();
+  return {
+    principal: d.leads ?? 0,
+    citas_confirmadas: d.citas_confirmadas ?? 0,
+    booking_rate: d.booking_rate ?? 0,
+    pipeline_eur: d.pipeline_eur ?? 0,
+    serie: d.serie || [],
+  };
+}
+
+/* ── Fuente: Supabase directo (Hunter) ── */
 function fechaDesde(range) {
   const now = new Date();
   const d = new Date(now);
@@ -485,26 +724,71 @@ function fechaDesde(range) {
   return d.toISOString();
 }
 
-async function loadHunter() {
-  try {
-    const desde = fechaDesde(currentRange);
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/leads?select=banda,estado&created_at=gte.${desde}`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    const leads = await res.json();
-    if (!Array.isArray(leads)) throw new Error('respuesta inesperada');
-    const total = leads.length;
-    const pri = leads.filter(l=>l.banda==='Priority').length;
-    const good = leads.filter(l=>l.banda==='Good').length;
-    const contactados = leads.filter(l=>l.estado && l.estado !== 'Nuevo').length;
-    document.getElementById('hunter-leads').textContent = total;
-    document.getElementById('hunter-pri').textContent = pri;
-    document.getElementById('hunter-good').textContent = good;
-    document.getElementById('hunter-contactados').textContent = contactados;
-  } catch(e) {
-    console.error('Error cargando Hunter', e);
-  }
+async function fetchSupabaseResumen(agente) {
+  const desde = fechaDesde(currentRange);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/leads?select=banda,estado,created_at&created_at=gte.${desde}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  const leads = await res.json();
+  if (!Array.isArray(leads)) throw new Error('respuesta inesperada de Supabase');
+  return {
+    principal: leads.length,
+    prioritarios: leads.filter(l => l.banda === 'Priority').length,
+    buenos: leads.filter(l => l.banda === 'Good').length,
+    contactados: leads.filter(l => l.estado && l.estado !== 'Nuevo').length,
+    serie: agruparPorIntervalo(leads.map(l => l.created_at), currentRange),
+  };
 }
+
+/* Agrupa timestamps en buckets según la granularidad activa — genérico,
+   lo puede usar cualquier fuente que devuelva una lista de timestamps */
+function agruparPorIntervalo(timestamps, range) {
+  const { puntos, unidad } = GRANULARIDAD[range];
+  const buckets = new Array(puntos).fill(0);
+  const ahora = new Date();
+  timestamps.forEach(ts => {
+    const fecha = new Date(ts);
+    let diff;
+    if (unidad === 'hour') diff = Math.floor((ahora - fecha) / 3600000);
+    else if (unidad === 'day') diff = Math.floor((ahora - fecha) / 86400000);
+    else if (unidad === 'week') diff = Math.floor((ahora - fecha) / (86400000*7));
+    else diff = Math.floor((ahora - fecha) / (86400000*30));
+    const idx = puntos - 1 - diff;
+    if (idx >= 0 && idx < puntos) buckets[idx]++;
+  });
+  return buckets;
+}
+
+function loadAllAgentData() {
+  AGENTES.forEach(loadAgentData);
+}
+
+/* ============================================================
+   SECCIÓN I — RESUMEN GENERAL (agentes activos, total) — genérico
+   ============================================================ */
+function pintarResumenGeneral() {
+  const activos = AGENTES.filter(a => a.estado === 'activo').length;
+  document.getElementById('sum-agentes').textContent = `${activos} / ${AGENTES.length}`;
+}
+
+/* ============================================================
+   SECCIÓN J — INIT
+   ============================================================ */
+function initApp() {
+  pintarResumenGeneral();
+  setLang(currentLang); /* dispara applyLang() -> renderAgentTiles() -> loadAllAgentData() */
+
+  document.getElementById('period-selector').addEventListener('click', (e) => {
+    const opt = e.target.closest('.period-opt');
+    if (!opt) return;
+    document.querySelectorAll('.period-opt').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    currentRange = opt.dataset.range;
+    loadAllAgentData();
+  });
+}
+
+checkAuth();
 </script>
 </body>
 </html>
