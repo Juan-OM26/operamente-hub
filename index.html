@@ -679,10 +679,13 @@ document.addEventListener('click', (e) => {
    tooltip se recortaría ahí. Por eso, al abrir, lo movemos
    temporalmente a <body> con position:fixed — así escapa de
    cualquier overflow:hidden de sus ancestros — y lo devolvemos
-   a su lugar original al cerrar. */
-document.addEventListener('mouseover', (e) => {
-  const wrap = e.target.closest('.help-wrap');
-  if (!wrap || wrap === tooltipActivo) return;
+   a su lugar original al cerrar.
+   Se usa mouseenter/mouseleave (no burbujean) sobre cada .help-wrap
+   individual vía delegación con capture, para que sea robusto sin
+   depender de relatedTarget. */
+function abrirTooltip(wrap) {
+  if (tooltipActivo === wrap) return;
+  cerrarTooltipActivo();
   const box = wrap.querySelector('.help-box');
   const btn = wrap.querySelector('.help-btn');
   if (!box || !btn) return;
@@ -700,20 +703,28 @@ document.addEventListener('mouseover', (e) => {
   left = Math.max(margen, Math.min(left, window.innerWidth - boxW - margen));
   box.style.left = `${left}px`;
   box.style.top = `${bRect.bottom + 8}px`;
-});
+}
 
-document.addEventListener('mouseout', (e) => {
-  const wrap = e.target.closest('.help-wrap');
-  if (!wrap || wrap !== tooltipActivo) return;
-  if (wrap.contains(e.relatedTarget)) return;
-  const box = wrap.querySelector('.help-box-fixed');
+function cerrarTooltipActivo() {
+  if (!tooltipActivo) return;
+  const box = tooltipActivo.querySelector('.help-box-fixed') || document.querySelector('.help-box-fixed');
   if (box && tooltipOriginalParent) {
     box.classList.remove('help-box-fixed');
     box.style.left = ''; box.style.top = '';
     tooltipOriginalParent.insertBefore(box, tooltipOriginalNextSibling);
   }
   tooltipActivo = null;
-});
+}
+
+document.addEventListener('mouseenter', (e) => {
+  const wrap = e.target.closest ? e.target.closest('.help-wrap') : null;
+  if (wrap) abrirTooltip(wrap);
+}, true);
+
+document.addEventListener('mouseleave', (e) => {
+  const wrap = e.target.closest ? e.target.closest('.help-wrap') : null;
+  if (wrap && wrap === tooltipActivo) cerrarTooltipActivo();
+}, true);
 
 
 
