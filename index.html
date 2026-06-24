@@ -110,8 +110,9 @@ body {
 .period-opt.active { color:#fff; background:var(--grad); box-shadow:0 0 18px rgba(124,63,237,0.4); font-weight:500; }
 
 /* ── 6. HELP TOOLTIP (?) — mismo patrón que Hunter, puro CSS hover.
-   Se centra respecto al botón por defecto; JS (ajustarTooltips) corrige
-   la posición si el cuadro se saldría de la pantalla por algún borde. */
+   Posición por defecto: centrado debajo del botón, vía CSS puro
+   (funciona siempre, sin depender de JS). JS solo lo CORRIGE si
+   se saldría de la pantalla por algún borde (ver ajustarTooltip). */
 .help-wrap { position:relative; display:inline-flex; align-items:center; flex-shrink:0; }
 .help-btn {
   width:16px; height:16px; border-radius:50%; border:0.5px solid var(--tx-mut); background:transparent;
@@ -120,8 +121,8 @@ body {
 }
 .help-wrap:hover .help-btn { opacity:1; }
 .help-box {
-  display:none; position:fixed; width:240px;
-  background:var(--bg); border:0.5px solid var(--glass-b); border-radius:10px; padding:13px 15px;
+  display:none; position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%);
+  width:240px; background:var(--bg); border:0.5px solid var(--glass-b); border-radius:10px; padding:13px 15px;
   font-size:11px; color:var(--tx-sub); line-height:1.6; z-index:9999;
   box-shadow:0 12px 32px rgba(0,0,0,0.5); pointer-events:none;
 }
@@ -216,7 +217,7 @@ body {
 .hub-footer { margin-top:40px; display:flex; flex-direction:column; align-items:center; gap:18px; }
 .hub-footer-line { width:100%; height:0.5px; background:var(--glass-b2); }
 .hub-footer-text { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--tx-faint); letter-spacing:0.3px; }
-#footer-logo { height:16px; opacity:0.55; }
+#footer-logo { height:22px; opacity:0.8; }
 
 /* ── 13. RESPONSIVE / MOBILE ──
    En mobile no hay hover real, por eso el panel se abre/cierra con
@@ -657,22 +658,30 @@ document.addEventListener('click', (e) => {
   if (!dentroDeTile && !dentroDePanel) cerrarPanel();
 });
 
-/* ── TOOLTIP (?) — posicionamiento dinámico para que nunca se corte
-   en los bordes de la pantalla, mismo patrón que ya usa Hunter ── */
+/* ── TOOLTIP (?) — el CSS ya centra el cuadro debajo del botón por
+   defecto (funciona siempre). Este script SOLO interviene cuando
+   ese centrado se saldría de la pantalla por izquierda o derecha,
+   reemplazando el centrado por un valor en píxeles que sí cabe. ── */
 document.addEventListener('mouseover', (e) => {
   const wrap = e.target.closest('.help-wrap');
   if (!wrap) return;
   const box = wrap.querySelector('.help-box');
   const btn = wrap.querySelector('.help-btn');
   if (!box || !btn) return;
-  const bRect = btn.getBoundingClientRect();
+  box.style.left = '';
+  box.style.transform = '';
   const boxW = 240;
   const margen = 16;
-  let left = bRect.left + (bRect.width / 2) - (boxW / 2);
-  left = Math.max(margen, Math.min(left, window.innerWidth - boxW - margen));
-  let top = bRect.bottom + 8;
-  box.style.left = `${left}px`;
-  box.style.top = `${top}px`;
+  const bRect = btn.getBoundingClientRect();
+  const idealLeft = bRect.left + (bRect.width / 2) - (boxW / 2);
+  if (idealLeft < margen) {
+    box.style.left = `${margen - bRect.left}px`;
+    box.style.transform = 'none';
+  } else if (idealLeft + boxW > window.innerWidth - margen) {
+    const corregido = (window.innerWidth - margen - boxW) - bRect.left;
+    box.style.left = `${corregido}px`;
+    box.style.transform = 'none';
+  }
 });
 
 
