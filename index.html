@@ -127,8 +127,7 @@ body {
 .help-wrap:hover .help-box { display:block; }
 
 /* ── 7. AGENT TILE (reposo) ── */
-.agent-row { position:relative; }
-.agent-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+.agent-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:0; }
 .agent-tile {
   position:relative; aspect-ratio:1/1; border-radius:22px; background:var(--tile-bg); border:0.5px solid var(--tile-b);
   display:flex; flex-direction:column; justify-content:space-between; padding:22px;
@@ -147,13 +146,16 @@ body {
 .agent-main-num.empty { color:var(--tx-faint); }
 .agent-main-lbl { font-size:10px; color:var(--tx-mut); letter-spacing:0.3px; text-transform:uppercase; }
 
-/* ── 8. PANEL DE DETALLE (revelado al hover/tap) ── */
+/* ── 8. PANEL DE DETALLE (revelado al hover/tap) ──
+   Vive en #panels-container, separado de la grid de tiles, para que
+   al abrirse ocupe el ancho COMPLETO (no solo 1/3 de una columna). */
+#panels-container { display:flex; flex-direction:column; }
 .agent-panel {
   max-height:0; opacity:0; overflow:hidden;
-  transition:max-height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s, margin-bottom 0.4s;
-  margin-bottom:0;
+  transition:max-height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s, margin-top 0.4s;
+  margin-top:0;
 }
-.agent-row.open .agent-panel { max-height:340px; opacity:1; margin-bottom:16px; }
+.agent-panel.show { max-height:340px; opacity:1; margin-top:18px; }
 .panel-inner {
   background:linear-gradient(165deg,var(--glass-1),var(--glass-2)); backdrop-filter:blur(20px);
   border:0.5px solid var(--glass-b); border-radius:20px; padding:28px 32px;
@@ -202,8 +204,9 @@ body {
 .login-footer { font-size:10px; color:var(--tx-faint); letter-spacing:0.1em; }
 
 /* ── 11. RESPONSIVE / MOBILE ──
-   En mobile no hay hover real, por eso .agent-row.open se activa con
-   tap (vía JS) en vez de :hover. Layout pasa a columna única. */
+   En mobile no hay hover real, por eso el panel se abre/cierra con
+   tap (vía JS, función onTileTap -> abrirPanel). Layout pasa a
+   columna única para los tiles; el panel sigue a ancho completo. */
 @media(max-width:768px){
   .wrap { padding:28px 18px 40px; }
   .header { flex-direction:column; align-items:flex-start; }
@@ -491,53 +494,15 @@ const COLOR_MAP = {
 
 function renderAgentTiles() {
   const container = document.getElementById('agents-container');
-  container.innerHTML = AGENTES.map(agente => {
+
+  const tiles = AGENTES.map(agente => {
     const c = COLOR_MAP[agente.color] || COLOR_MAP.neutro;
     const esPendiente = agente.estado === 'pendiente';
     const dotClass = esPendiente ? 'pendiente' : 'activo';
     const dotLabel = esPendiente ? t('pendiente') : t('activo');
 
     return `
-    <div class="agent-row" id="row-${agente.id}" data-agente="${agente.id}">
-
-      <div class="agent-panel" id="panel-${agente.id}">
-        <div class="panel-inner" style="background:${c.panelBg};border-color:${c.panelB}">
-          ${esPendiente ? `
-            <div class="panel-empty-msg">${L(agente.descripcion)} · ${t('en_construccion')}</div>
-          ` : `
-            <div class="panel-top">
-              <div>
-                <div class="panel-main-num" id="panel-main-${agente.id}">—</div>
-                <div class="panel-main-lbl">${L(agente.metricaLbl)} · <span id="panel-rangelbl-${agente.id}"></span></div>
-              </div>
-              <div class="panel-secondaries">
-                ${agente.secundarias.map(s => `
-                  <div>
-                    <div class="panel-sec-lbl">${L(s.label)}</div>
-                    <div class="panel-sec-val" id="panel-${s.clave}-${agente.id}">—</div>
-                  </div>
-                `).join('')}
-              </div>
-              ${agente.urlCompleto ? `<a class="panel-cta" href="${agente.urlCompleto}" target="_blank" style="color:${c.cta}">${t('ver_completo')}<span>→</span></a>` : ''}
-            </div>
-            <div class="panel-trend">
-              <div class="panel-trend-head">
-                <div class="panel-trend-lbl">
-                  ${t('tendencia')}
-                  <div class="help-wrap">
-                    <button class="help-btn">?</button>
-                    <div class="help-box">${t('help_tendencia')}</div>
-                  </div>
-                </div>
-                <div class="panel-trend-gran" id="panel-gran-${agente.id}"></div>
-              </div>
-              <div id="panel-chart-${agente.id}"></div>
-            </div>
-          `}
-        </div>
-      </div>
-
-      <div class="agent-tile ${esPendiente ? 'pending' : ''}" onclick="onTileTap('${agente.id}')">
+      <div class="agent-tile ${esPendiente ? 'pending' : ''}" id="tile-${agente.id}" onclick="onTileTap('${agente.id}')">
         <div class="agent-tile-head">
           <div class="agent-icon ${esPendiente ? 'pending' : ''}" style="${esPendiente ? '' : `box-shadow:0 0 16px ${c.iconGlow}`}">OM</div>
           <div style="flex:1">
@@ -558,37 +523,94 @@ function renderAgentTiles() {
             `}
           </div>
         </div>
-      </div>
-
-    </div>`;
+      </div>`;
   }).join('');
+
+  const paneles = AGENTES.map(agente => {
+    const c = COLOR_MAP[agente.color] || COLOR_MAP.neutro;
+    const esPendiente = agente.estado === 'pendiente';
+    if (esPendiente) return '';
+
+    return `
+      <div class="agent-panel" id="panel-${agente.id}">
+        <div class="panel-inner" style="background:${c.panelBg};border-color:${c.panelB}">
+          <div class="panel-top">
+            <div>
+              <div class="panel-main-num" id="panel-main-${agente.id}">—</div>
+              <div class="panel-main-lbl">${L(agente.metricaLbl)} · <span id="panel-rangelbl-${agente.id}"></span></div>
+            </div>
+            <div class="panel-secondaries">
+              ${agente.secundarias.map(s => `
+                <div>
+                  <div class="panel-sec-lbl">${L(s.label)}</div>
+                  <div class="panel-sec-val" id="panel-${s.clave}-${agente.id}">—</div>
+                </div>
+              `).join('')}
+            </div>
+            ${agente.urlCompleto ? `<a class="panel-cta" href="${agente.urlCompleto}" target="_blank" style="color:${c.cta}">${t('ver_completo')}<span>→</span></a>` : ''}
+          </div>
+          <div class="panel-trend">
+            <div class="panel-trend-head">
+              <div class="panel-trend-lbl">
+                ${t('tendencia')}
+                <div class="help-wrap">
+                  <button class="help-btn">?</button>
+                  <div class="help-box">${t('help_tendencia')}</div>
+                </div>
+              </div>
+              <div class="panel-trend-gran" id="panel-gran-${agente.id}"></div>
+            </div>
+            <div id="panel-chart-${agente.id}"></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="agent-grid">${tiles}</div>
+    <div id="panels-container">${paneles}</div>
+  `;
 }
 
 /* Tap para mobile (y también funciona en desktop como respaldo del hover) */
-let openRowId = null;
-function onTileTap(agenteId) {
-  const isTouch = window.matchMedia('(hover: none)').matches;
-  if (!isTouch) return; /* en desktop el hover de CSS ya hace el trabajo */
-  const row = document.getElementById('row-' + agenteId);
-  if (openRowId === agenteId) {
-    row.classList.remove('open');
-    openRowId = null;
-  } else {
-    if (openRowId) document.getElementById('row-' + openRowId)?.classList.remove('open');
-    row.classList.add('open');
-    openRowId = agenteId;
-  }
+let openAgentId = null;
+function abrirPanel(agenteId) {
+  if (openAgentId) document.getElementById('panel-' + openAgentId)?.classList.remove('show');
+  if (openAgentId === agenteId) { openAgentId = null; return; }
+  document.getElementById('panel-' + agenteId)?.classList.add('show');
+  openAgentId = agenteId;
+}
+function cerrarPanel() {
+  if (openAgentId) document.getElementById('panel-' + openAgentId)?.classList.remove('show');
+  openAgentId = null;
 }
 
-/* En desktop usamos hover real vía CSS, agregando .open por JS para consistencia */
+function onTileTap(agenteId) {
+  const isTouch = window.matchMedia('(hover: none)').matches;
+  if (!isTouch) return; /* en desktop el hover ya hace el trabajo, ver attachHoverHandlers */
+  const agente = AGENTES.find(a => a.id === agenteId);
+  if (!agente || agente.estado === 'pendiente') return;
+  abrirPanel(agenteId);
+}
+
+/* En desktop usamos hover real sobre el tile para abrir/cerrar su panel */
 function attachHoverHandlers() {
   AGENTES.forEach(agente => {
-    const row = document.getElementById('row-' + agente.id);
-    if (!row) return;
-    row.addEventListener('mouseenter', () => { if (!window.matchMedia('(hover: none)').matches) row.classList.add('open'); });
-    row.addEventListener('mouseleave', () => { if (!window.matchMedia('(hover: none)').matches) row.classList.remove('open'); });
+    if (agente.estado === 'pendiente') return;
+    const tile = document.getElementById('tile-' + agente.id);
+    if (!tile) return;
+    tile.addEventListener('mouseenter', () => {
+      if (window.matchMedia('(hover: none)').matches) return;
+      abrirPanel(agente.id);
+    });
+    tile.addEventListener('mouseleave', () => {
+      if (window.matchMedia('(hover: none)').matches) return;
+      document.getElementById('panel-' + agente.id)?.classList.remove('show');
+      if (openAgentId === agente.id) openAgentId = null;
+    });
   });
 }
+
 
 /* ============================================================
    SECCIÓN E — APLICAR IDIOMA A TODO LO ESTÁTICO + RE-RENDER
