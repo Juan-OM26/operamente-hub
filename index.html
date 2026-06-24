@@ -180,6 +180,7 @@ body {
 [data-theme="light"] .panel-cta.cta-magenta { color:#C2257E; }
 [data-theme="light"] .panel-cta.cta-neutro  { color:var(--tx-sub); }
 .panel-trend { border-top:0.5px solid var(--glass-b2); padding-top:16px; }
+.trend-eje { display:flex; justify-content:space-between; margin-top:6px; font-size:9px; color:var(--tx-faint); letter-spacing:0.2px; }
 .panel-trend-head { display:flex; justify-content:space-between; margin-bottom:10px; align-items:center; }
 .panel-trend-lbl { font-size:9px; color:var(--tx-mut); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px; }
 .panel-trend-gran { font-size:9px; color:var(--tx-faint); }
@@ -808,11 +809,43 @@ function renderTrendSVG(containerId, valores) {
     return `${x},${y}`;
   }).join(' ');
   const lastX = w, lastY = Math.round(h - 6 - ((valores[valores.length-1] - min) / range) * (h - 12));
+  const ejeFechas = generarEjeFechas(valores.length);
   el.innerHTML = `
     <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
       <polyline points="${points}" fill="none" stroke="#B98FF0" stroke-width="2"/>
       <circle cx="${lastX}" cy="${lastY}" r="4" fill="#F52F83"/>
-    </svg>`;
+    </svg>
+    <div class="trend-eje">
+      <span>${ejeFechas.inicio}</span>
+      ${ejeFechas.medio ? `<span>${ejeFechas.medio}</span>` : ''}
+      <span>${ejeFechas.fin}</span>
+    </div>`;
+}
+
+/* Calcula las etiquetas del eje horizontal (inicio / medio / fin)
+   según el rango activo y cuántos puntos tiene la serie — genérico,
+   funciona igual para cualquier agente. */
+function generarEjeFechas(cantidadPuntos) {
+  const { unidad } = GRANULARIDAD[currentRange];
+  const locale = currentLang === 'en' ? 'en-US' : 'es-ES';
+  const ahora = new Date();
+  const fechaDe = (pasosAtras) => {
+    const f = new Date(ahora);
+    if (unidad === 'hour') f.setHours(f.getHours() - pasosAtras);
+    else if (unidad === 'day') f.setDate(f.getDate() - pasosAtras);
+    else if (unidad === 'week') f.setDate(f.getDate() - pasosAtras * 7);
+    else f.setMonth(f.getMonth() - pasosAtras);
+    return f;
+  };
+  const formatoCorto = (f) => {
+    if (unidad === 'hour') return f.toLocaleTimeString(locale, { hour: '2-digit', minute:'2-digit' });
+    if (unidad === 'month') return f.toLocaleDateString(locale, { month: 'short', year:'2-digit' });
+    return f.toLocaleDateString(locale, { day:'2-digit', month:'short' });
+  };
+  const inicio = formatoCorto(fechaDe(cantidadPuntos - 1));
+  const fin = formatoCorto(fechaDe(0));
+  const medio = cantidadPuntos >= 6 ? formatoCorto(fechaDe(Math.floor((cantidadPuntos - 1) / 2))) : null;
+  return { inicio, medio, fin };
 }
 
 /* ============================================================
