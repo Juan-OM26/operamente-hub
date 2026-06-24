@@ -152,10 +152,10 @@ body {
 #panels-container { display:flex; flex-direction:column; }
 .agent-panel {
   max-height:0; opacity:0; overflow:hidden;
-  transition:max-height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s, margin-top 0.4s;
-  margin-top:0;
+  transition:max-height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s, margin-bottom 0.4s;
+  margin-bottom:0;
 }
-.agent-panel.show { max-height:340px; opacity:1; margin-top:18px; }
+.agent-panel.show { max-height:340px; opacity:1; margin-bottom:18px; }
 .panel-inner {
   background:linear-gradient(165deg,var(--glass-1),var(--glass-2)); backdrop-filter:blur(20px);
   border:0.5px solid var(--glass-b); border-radius:20px; padding:28px 32px;
@@ -252,8 +252,7 @@ body {
   <!-- ── HEADER ── -->
   <div class="header">
     <div>
-      <div class="brand-sub">operamente</div>
-      <div class="brand-title">Hub</div>
+      <img src="https://operamente-github.jdray1.easypanel.host/logo/Operamente.png" alt="Operamente" id="header-logo" style="height:34px;">
     </div>
     <div class="header-right">
       <div class="pill-btn" id="topbar-date"></div>
@@ -289,7 +288,9 @@ body {
   <!-- ============================================================
        AGENT TILES — generados dinámicamente por JS desde el array
        AGENTES (ver sección "CONFIG AGENTES" en el <script> abajo).
-       Este <div> queda vacío en el HTML; renderAgentTiles() lo llena.
+       Este <div> queda vacío en el HTML; renderAgentTiles() lo llena
+       con: 1) el panel de detalle (arriba, oculto por defecto),
+       2) la grid de tiles (abajo, siempre visible).
        ============================================================ -->
   <div id="agents-container"></div>
 
@@ -442,6 +443,10 @@ function checkAuth() {
   } else {
     document.getElementById('lang-es')?.classList.toggle('on', currentLang === 'es');
     document.getElementById('lang-en')?.classList.toggle('on', currentLang === 'en');
+    const logoSrc = theme === 'dark'
+      ? 'https://operamente-github.jdray1.easypanel.host/logo/Operamente.png'
+      : 'https://operamente-github.jdray1.easypanel.host/logo/Operamente-dark.png';
+    document.getElementById('login-logo').src = logoSrc;
     applyLoginLang();
     document.getElementById('login-input').focus();
   }
@@ -460,6 +465,13 @@ function setTheme(th) {
   const d = th === 'dark';
   document.getElementById('theme-icon').textContent = d ? '☀' : '☾';
   document.getElementById('theme-label').textContent = d ? (currentLang === 'en' ? 'Light' : 'Claro') : (currentLang === 'en' ? 'Dark' : 'Oscuro');
+  const logoSrc = d
+    ? 'https://operamente-github.jdray1.easypanel.host/logo/Operamente.png'
+    : 'https://operamente-github.jdray1.easypanel.host/logo/Operamente-dark.png';
+  const logoEl = document.getElementById('header-logo');
+  if (logoEl) logoEl.src = logoSrc;
+  const loginLogoEl = document.getElementById('login-logo');
+  if (loginLogoEl) loginLogoEl.src = logoSrc;
 }
 function toggleTheme() { setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
 
@@ -567,8 +579,8 @@ function renderAgentTiles() {
   }).join('');
 
   container.innerHTML = `
-    <div class="agent-grid">${tiles}</div>
     <div id="panels-container">${paneles}</div>
+    <div class="agent-grid">${tiles}</div>
   `;
 }
 
@@ -593,7 +605,10 @@ function onTileTap(agenteId) {
   abrirPanel(agenteId);
 }
 
-/* En desktop usamos hover real sobre el tile para abrir/cerrar su panel */
+/* En desktop usamos hover real sobre el tile para ABRIR su panel.
+   El panel ya NO se cierra al quitar el cursor — se queda abierto
+   hasta que el usuario pase el cursor sobre otro tile (cambia de
+   panel) o haga clic fuera de cualquier tile/panel (se cierra). */
 function attachHoverHandlers() {
   AGENTES.forEach(agente => {
     if (agente.estado === 'pendiente') return;
@@ -603,13 +618,17 @@ function attachHoverHandlers() {
       if (window.matchMedia('(hover: none)').matches) return;
       abrirPanel(agente.id);
     });
-    tile.addEventListener('mouseleave', () => {
-      if (window.matchMedia('(hover: none)').matches) return;
-      document.getElementById('panel-' + agente.id)?.classList.remove('show');
-      if (openAgentId === agente.id) openAgentId = null;
-    });
   });
 }
+
+/* Clic en cualquier parte que NO sea un tile ni un panel = cerrar */
+document.addEventListener('click', (e) => {
+  if (window.matchMedia('(hover: none)').matches) return; /* en mobile esto lo maneja onTileTap */
+  const dentroDeTile = e.target.closest('.agent-tile');
+  const dentroDePanel = e.target.closest('.agent-panel');
+  if (!dentroDeTile && !dentroDePanel) cerrarPanel();
+});
+
 
 
 /* ============================================================
