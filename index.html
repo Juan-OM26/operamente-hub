@@ -175,9 +175,11 @@ body {
 .panel-cta { font-size:12px; font-weight:500; display:flex; align-items:center; gap:6px; white-space:nowrap; align-self:flex-start; margin-top:4px; text-decoration:none; }
 .panel-cta.cta-violeta { color:#D9C8FB; }
 .panel-cta.cta-magenta { color:#F5C2DC; }
+.panel-cta.cta-lila    { color:#C9B6F2; }
 .panel-cta.cta-neutro  { color:var(--tx-sub); }
 [data-theme="light"] .panel-cta.cta-violeta { color:#6A2DE2; }
 [data-theme="light"] .panel-cta.cta-magenta { color:#C2257E; }
+[data-theme="light"] .panel-cta.cta-lila    { color:#7C5FD0; }
 [data-theme="light"] .panel-cta.cta-neutro  { color:var(--tx-sub); }
 .panel-trend { border-top:0.5px solid var(--glass-b2); padding-top:16px; }
 .trend-eje { position:relative; height:14px; margin-top:4px; font-size:9px; color:var(--tx-faint); letter-spacing:0.2px; }
@@ -386,12 +388,19 @@ const AGENTES = [
     id: 'vera',
     nombre: 'Vera',
     descripcion: { es: 'agente de voz inmobiliario', en: 'real estate voice agent' },
-    color: 'neutro',
-    estado: 'pendiente',
-    urlCompleto: null,
-    fuente: 'ninguna',
+    color: 'lila',
+    estado: 'activo',
+    urlCompleto: 'https://vera.operamente.com',
+    fuente: 'webhook-lista', /* el webhook devuelve la lista cruda de llamadas;
+                                el Hub calcula los KPIs en el navegador, igual
+                                que ya hace con Hunter sobre Supabase */
+    webhookUrl: 'https://operamente-n8n.jdray1.easypanel.host/webhook/vera-dashboard-metrics',
     metricaLbl: { es: 'llamadas', en: 'calls' },
-    secundarias: [],
+    secundarias: [
+      { clave: 'calificacion', label: { es: 'Tasa de calificación', en: 'Qualification rate' }, formato: 'porcentaje' },
+      { clave: 'entregados',   label: { es: 'Leads entregados', en: 'Leads delivered' },         formato: 'numero' },
+      { clave: 'duracion_prom', label: { es: 'Duración prom.', en: 'Avg. duration' },            formato: 'duracion' },
+    ],
   },
   /* ── Para agregar un cuarto agente, copia un bloque {...} de arriba
         y ajusta sus valores. No hay que tocar nada más en el archivo. ── */
@@ -534,6 +543,7 @@ function updateDateLocale() {
 const COLOR_MAP = {
   violeta: { tileBg:'linear-gradient(165deg,rgba(124,63,237,0.13),rgba(255,255,255,0.02))', tileB:'rgba(180,140,240,0.18)', iconGlow:'rgba(124,63,237,0.4)', panelBg:'linear-gradient(165deg,rgba(124,63,237,0.1),rgba(255,255,255,0.025))', panelB:'rgba(180,140,240,0.2)', cta:'#D9C8FB' },
   magenta: { tileBg:'linear-gradient(165deg,rgba(245,47,131,0.09),rgba(255,255,255,0.02))', tileB:'rgba(240,140,180,0.18)', iconGlow:'rgba(245,47,131,0.35)', panelBg:'linear-gradient(165deg,rgba(245,47,131,0.08),rgba(255,255,255,0.02))', panelB:'rgba(240,140,180,0.2)', cta:'#F5C2DC' },
+  lila:    { tileBg:'linear-gradient(165deg,rgba(156,127,232,0.12),rgba(255,255,255,0.02))', tileB:'rgba(156,127,232,0.2)',  iconGlow:'rgba(156,127,232,0.4)', panelBg:'linear-gradient(165deg,rgba(156,127,232,0.1),rgba(255,255,255,0.025))', panelB:'rgba(156,127,232,0.22)', cta:'#C9B6F2' },
   neutro:  { tileBg:'rgba(255,255,255,0.04)', tileB:'rgba(255,255,255,0.08)', iconGlow:'none', panelBg:'rgba(255,255,255,0.04)', panelB:'rgba(255,255,255,0.1)', cta:'rgba(255,255,255,0.6)' },
 };
 
@@ -801,6 +811,11 @@ function formatVal(valor, formato) {
   if (valor === null || valor === undefined) return '—';
   if (formato === 'porcentaje') return valor + '%';
   if (formato === 'eur') return Number(valor).toLocaleString(currentLang === 'en' ? 'en-US' : 'es-ES') + ' EUR';
+  if (formato === 'duracion') {
+    const mins = Math.floor(valor / 60);
+    const segs = Math.round(valor % 60);
+    return `${mins}:${segs.toString().padStart(2, '0')}`;
+  }
   return valor;
 }
 
@@ -901,6 +916,8 @@ async function loadAgentData(agente) {
       datos = await fetchWebhookResumen(agente);
     } else if (agente.fuente === 'supabase') {
       datos = await fetchSupabaseResumen(agente);
+    } else if (agente.fuente === 'webhook-lista') {
+      datos = await fetchWebhookLista(agente);
     } else {
       return;
     }
@@ -998,6 +1015,37 @@ function agruparPorIntervalo(timestamps, range) {
     if (idx >= 0 && idx < puntos) buckets[idx]++;
   });
   return buckets;
+}
+
+/* ── Fuente: webhook-lista — el webhook devuelve la lista cruda de
+   registros (no un resumen ya calculado), así que el Hub filtra por
+   fecha y calcula los KPIs en el navegador. Hoy la usa Vera; sirve
+   para cualquier agente futuro cuyo webhook tenga esta misma forma. */
+async function fetchWebhookLista(agente) {
+  const res = await fetch(agente.webhookUrl);
+  const data = await res.json();
+  const lista = data.calls || data.items || data.registros || [];
+  if (!Array.isArray(lista)) throw new Error('respuesta inesperada del webhook-lista');
+
+  const desde = new Date(fechaDesde(currentRange));
+  const filtrada = lista.filter(item => new Date(item.created_at) >= desde);
+
+  const total = filtrada.length;
+  const calificadas = filtrada.filter(item => item.cierre_completado === true);
+  const entregados = calificadas.filter(item => item.followup_enviado === true).length;
+  const tasaCalificacion = total > 0 ? Math.round((calificadas.length / total) * 100) : 0;
+  const duraciones = filtrada.map(item => item.duracion_segundos || 0);
+  const duracionProm = duraciones.length > 0
+    ? Math.round(duraciones.reduce((a, b) => a + b, 0) / duraciones.length)
+    : 0;
+
+  return {
+    principal: total,
+    calificacion: tasaCalificacion,
+    entregados: entregados,
+    duracion_prom: duracionProm,
+    serie: agruparPorIntervalo(filtrada.map(item => item.created_at), currentRange),
+  };
 }
 
 function loadAllAgentData() {
